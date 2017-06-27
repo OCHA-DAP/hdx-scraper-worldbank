@@ -1,0 +1,2 @@
+# Collector specific configuration
+base_url: "http://api.worldbank.org/"

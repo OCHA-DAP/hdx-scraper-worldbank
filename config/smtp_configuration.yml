@@ -1,0 +1,4 @@
+handlers:
+    error_mail_handler:
+        toaddrs: mcarans@yahoo.co.uk
+        subject: "SCRAPER FAILED: hdxscraper-fts"
