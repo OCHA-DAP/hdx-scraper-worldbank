@@ -22,6 +22,7 @@ class TestWorldBank:
     def configuration(self):
         Configuration._create(hdx_read_only=True,
                              project_config_yaml=join('tests', 'config', 'project_configuration.yml'))
+
     @pytest.fixture(scope='function')
     def downloader(self):
         class Request:
