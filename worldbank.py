@@ -7,11 +7,16 @@ World Bank:
 Generates World Bank datasets.
 
 """
+import logging
+
 from hdx.configuration import Configuration
 from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
 from hdx.data.resource import Resource
 from slugify import slugify
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_indicators_and_tags(base_url, downloader, indicator_list):
@@ -58,7 +63,8 @@ def generate_dataset(countryiso, countryname, indicators, date):
     })
     try:
         dataset.add_country_location(countryiso)
-    except HDXError:
+    except HDXError as e:
+        logger.exception('%s has a problem! %s' % (countryname, e))
         return None
     dataset.set_dataset_date_from_datetime(date)
     dataset.set_expected_update_frequency('Every day')
