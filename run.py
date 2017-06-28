@@ -10,6 +10,7 @@ that register datasets in HDX.
 '''
 import sys
 import logging
+from datetime import datetime
 from os.path import join
 from tempfile import gettempdir
 
@@ -63,7 +64,7 @@ def main():
     indicators, tags = get_indicators_and_tags(base_url, downloader, indicator_list)
 
     for countryiso, countryname in get_countries(base_url, downloader):
-        dataset = generate_dataset(countryiso, countryname, indicators)
+        dataset = generate_dataset(countryiso, countryname, indicators, datetime.now())
         if dataset is not None:
             logger.info('Adding %s' % countryname)
             dataset.add_tags(tags)

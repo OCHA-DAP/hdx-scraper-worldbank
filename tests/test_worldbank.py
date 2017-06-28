@@ -4,6 +4,7 @@
 Unit tests for worldbank.
 
 '''
+from datetime import datetime
 from os.path import join
 
 import pytest
@@ -80,7 +81,8 @@ class TestWorldBank:
         assert countries == [('ABW', 'Aruba'), ('AFG', 'Afghanistan'), ('AGO', 'Angola')]
 
     def test_generate_dataset(self, configuration):
-        dataset = generate_dataset('AFG', 'Afghanistan', TestWorldBank.indicators)
+        today = datetime.strptime('27062017', '%d%m%Y').date()
+        dataset = generate_dataset('AFG', 'Afghanistan', TestWorldBank.indicators, today)
         assert dataset == {'title': 'World Bank Indicators for Afghanistan', 'groups': [{'name': 'afg'}],
                            'data_update_frequency': '1', 'dataset_date': '06/27/2017',
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],

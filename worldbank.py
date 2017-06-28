@@ -7,11 +7,9 @@ World Bank:
 Generates World Bank datasets.
 
 '''
-from datetime import datetime
-from os.path import join
-
 from hdx.configuration import Configuration
 from hdx.data.dataset import Dataset
+from hdx.data.hdxobject import HDXError
 from hdx.data.resource import Resource
 from slugify import slugify
 
@@ -45,7 +43,7 @@ def get_countries(base_url, downloader):
             yield country['id'], country['name']
 
 
-def generate_dataset(countryiso, countryname, indicators):
+def generate_dataset(countryiso, countryname, indicators, date):
     '''
     http://api.worldbank.org/countries/bra/indicators/NY.GNP.PCAP.CD
     '''
@@ -58,9 +56,12 @@ def generate_dataset(countryiso, countryname, indicators):
         'name': slugified_name,
         'title': title,
     })
-    dataset.set_dataset_date_from_datetime(datetime.now())
+    try:
+        dataset.add_country_location(countryiso)
+    except HDXError:
+        return None
+    dataset.set_dataset_date_from_datetime(date)
     dataset.set_expected_update_frequency('Every day')
-    dataset.add_country_location(countryiso)
     dataset.add_tags(['indicators', 'World Bank'])
 
     for indicator_code, indicator_name, indicator_note, indicator_source in indicators:
