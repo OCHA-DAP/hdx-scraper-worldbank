@@ -1,11 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-REGISTER:
----------
-
-Caller script. Designed to call all other functions
-that register datasets in HDX.
+Top level script. Calls other functions that generate datasets that this script then creates in HDX.
 
 """
 import logging
