@@ -8,11 +8,9 @@ Caller script. Designed to call all other functions
 that register datasets in HDX.
 
 '''
-import sys
 import logging
 from datetime import datetime
 from os.path import join
-from tempfile import gettempdir
 
 from hdx.configuration import Configuration
 from hdx.facades.hdx_scraperwiki import facade
