@@ -1,12 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-'''
+"""
 World Bank:
 ----------
 
 Generates World Bank datasets.
 
-'''
+"""
 from hdx.configuration import Configuration
 from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
@@ -44,9 +44,9 @@ def get_countries(base_url, downloader):
 
 
 def generate_dataset(countryiso, countryname, indicators, date):
-    '''
+    """
     http://api.worldbank.org/countries/bra/indicators/NY.GNP.PCAP.CD
-    '''
+    """
     base_url = Configuration.read()['base_url']
 
     title = 'World Bank Indicators for %s' % countryname

@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-'''
+"""
 REGISTER:
 ---------
 
 Caller script. Designed to call all other functions
 that register datasets in HDX.
 
-'''
+"""
 import logging
 from datetime import datetime
 from os.path import join
@@ -55,7 +55,7 @@ indicator_list = [
 
 
 def main():
-    '''Generate dataset and create it in HDX'''
+    """Generate dataset and create it in HDX"""
 
     base_url = Configuration.read()['base_url']
     downloader = Download()

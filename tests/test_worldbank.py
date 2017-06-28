@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-'''
+"""
 Unit tests for worldbank.
 
-'''
+"""
 from datetime import datetime
 from os.path import join
 
