@@ -9,7 +9,7 @@ Generates World Bank datasets.
 """
 import logging
 
-from hdx.configuration import Configuration
+from hdx.hdx_configuration import Configuration
 from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
 from hdx.data.resource import Resource

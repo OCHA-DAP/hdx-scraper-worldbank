@@ -8,7 +8,7 @@ from datetime import datetime
 from os.path import join
 
 import pytest
-from hdx.configuration import Configuration
+from hdx.hdx_configuration import Configuration
 
 from worldbank import generate_dataset, get_indicators_and_tags, get_countries
 

@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from os.path import join
 
-from hdx.configuration import Configuration
+from hdx.hdx_configuration import Configuration
 from hdx.facades.hdx_scraperwiki import facade
 from hdx.utilities.downloader import Download
 
