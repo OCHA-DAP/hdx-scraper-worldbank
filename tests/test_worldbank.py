@@ -88,3 +88,7 @@ class TestWorldBank:
                            'data_update_frequency': '1', 'dataset_date': '06/27/2017',
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
                            'name': 'world-bank-indicators-for-afghanistan'}
+        resources = dataset.get_resources()
+        assert resources == [{'name': 'Land area (sq. km)', 'format': 'json',
+                              'description': "Source: Food and Agriculture Organization, electronic files and web site.  \n   \nLand area is a country's total area... and lakes.",
+                              'url': 'http://papa/countries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000'}]
