@@ -48,12 +48,21 @@ def get_countries(base_url, downloader):
             yield country['id'], country['name']
 
 
-def generate_dataset(countryiso, countryname, indicators, date):
+def get_dataset_date_range(base_url, downloader):
+    url = '%scountries/USA/indicators/SP.POP.TOTL?format=json&per_page=10000' % base_url
+    response = downloader.download(url)
+    json = response.json()
+    years = list()
+    for yeardict in json[1]:
+        years.append(yeardict['date'])
+    years = sorted(years)
+    return years[0], years[-1]
+
+
+def generate_dataset(base_url, countryiso, countryname, indicators, dataset_date_range):
     """
     http://api.worldbank.org/countries/bra/indicators/NY.GNP.PCAP.CD
     """
-    base_url = Configuration.read()['base_url']
-
     title = 'World Bank Indicators for %s' % countryname
     slugified_name = slugify(title).lower()
 
@@ -66,7 +75,7 @@ def generate_dataset(countryiso, countryname, indicators, date):
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
         return None
-    dataset.set_dataset_date_from_datetime(date)
+    dataset.set_dataset_year_range(dataset_date_range[0], dataset_date_range[1])
     dataset.set_expected_update_frequency('Every day')
     dataset.add_tags(['indicators', 'World Bank'])
 

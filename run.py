@@ -12,7 +12,7 @@ from hdx.hdx_configuration import Configuration
 from hdx.facades.hdx_scraperwiki import facade
 from hdx.utilities.downloader import Download
 
-from worldbank import generate_dataset, get_countries, get_indicators_and_tags
+from worldbank import generate_dataset, get_countries, get_indicators_and_tags, get_dataset_date_range
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +56,10 @@ def main():
     base_url = Configuration.read()['base_url']
     downloader = Download()
     indicators, tags = get_indicators_and_tags(base_url, downloader, indicator_list)
+    dataset_date_range = get_dataset_date_range(base_url, downloader)
 
     for countryiso, countryname in get_countries(base_url, downloader):
-        dataset = generate_dataset(countryiso, countryname, indicators, datetime.now())
+        dataset = generate_dataset(base_url, countryiso, countryname, indicators, dataset_date_range)
         if dataset is not None:
             logger.info('Adding %s' % countryname)
             dataset.add_tags(tags)
