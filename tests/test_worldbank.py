@@ -107,7 +107,7 @@ class TestWorldBank:
         dataset = generate_dataset(base_url, 'AFG', 'Afghanistan', TestWorldBank.indicators, ('1960', '2016'))
         print(dataset)
         assert dataset == {'title': 'World Bank Indicators for Afghanistan', 'groups': [{'name': 'afg'}],
-                           'data_update_frequency': '1', 'dataset_date': '01/01/1960-12/31/2016',
+                           'data_update_frequency': '365', 'dataset_date': '01/01/1960-12/31/2016',
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
                            'name': 'world-bank-indicators-for-afghanistan'}
         resources = dataset.get_resources()

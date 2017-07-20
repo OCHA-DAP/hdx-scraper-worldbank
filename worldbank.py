@@ -76,7 +76,7 @@ def generate_dataset(base_url, countryiso, countryname, indicators, dataset_date
         logger.exception('%s has a problem! %s' % (countryname, e))
         return None
     dataset.set_dataset_year_range(dataset_date_range[0], dataset_date_range[1])
-    dataset.set_expected_update_frequency('Every day')
+    dataset.set_expected_update_frequency('Every year')
     dataset.add_tags(['indicators', 'World Bank'])
 
     for indicator_code, indicator_name, indicator_note, indicator_source in indicators:
