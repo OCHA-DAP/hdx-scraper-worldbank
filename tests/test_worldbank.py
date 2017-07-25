@@ -99,13 +99,11 @@ class TestWorldBank:
         base_url = Configuration.read()['base_url']
         folder = gettempdir()
         dataset = generate_dataset(base_url, downloader, folder, 'AFG', 'Afghanistan', TestWorldBank.indicators, ['AG.LND.TOTL.K2'])
-        print(dataset)
         assert dataset == {'title': 'World Bank Indicators for Afghanistan', 'groups': [{'name': 'afg'}],
                            'data_update_frequency': '365', 'dataset_date': '01/01/2014-12/31/2016',
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
                            'name': 'world-bank-indicators-for-afghanistan'}
         resources = dataset.get_resources()
-        print(resources)
         assert resources == [{'name': 'Land area (sq. km)', 'format': 'json',
                               'description': "Source: Food and Agriculture Organization, electronic files and web site.  \n   \nLand area is a country's total area... and lakes.",
                               'url': '%scountries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000' % base_url},
