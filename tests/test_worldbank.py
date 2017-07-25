@@ -4,13 +4,13 @@
 Unit tests for worldbank.
 
 """
-from datetime import datetime
 from os.path import join
+from tempfile import gettempdir
 
 import pytest
 from hdx.hdx_configuration import Configuration
 
-from worldbank import generate_dataset, get_indicators_and_tags, get_countries, get_dataset_date_range
+from worldbank import generate_dataset, get_indicators_and_tags, get_countries
 
 
 class TestWorldBank:
@@ -43,21 +43,18 @@ class TestWorldBank:
                                   'sourceOrganization': 'Food and Agriculture Organization, electronic files and web site.',
                                   'id': 'AG.LND.TOTL.K2', 'name': 'Land area (sq. km)'}]]
                     request.json = fn
-                elif url == 'http://haha/countries/USA/indicators/SP.POP.TOTL?format=json&per_page=10000':
+                elif url == 'http://papa/countries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000':
                     def fn():
-                        return [{'pages': 1, 'per_page': '10000', 'page': 1, 'total': 1},
-                                [{"indicator": {"id": "SP.POP.TOTL", "value": "Population, total"},
-                                  "country": {"id": "US", "value": "United States"}, "value": "323127513",
-                                  "decimal": "0", "date": "2016"},
-                                 {"indicator": {"id": "SP.POP.TOTL", "value": "Population, total"},
-                                  "country": {"id": "US", "value": "United States"}, "value": "320896618",
-                                  "decimal": "0", "date": "2015"},
-                                 {"indicator": {"id": "SP.POP.TOTL", "value": "Population, total"},
-                                  "country": {"id": "US", "value": "United States"}, "value": "318563456",
-                                  "decimal": "0", "date": "2014"},
-                                 {"indicator": {"id": "SP.POP.TOTL", "value": "Population, total"},
-                                  "country": {"id": "US", "value": "United States"}, "value": "316204908",
-                                  "decimal": "0", "date": "2013"}]]
+                        return [{'pages': 1, 'page': 1, 'per_page': '10000', 'total': 57},
+                                [{'country': {'id': 'AF', 'value': 'Afghanistan'}, 'date': '2016', 'decimal': '1',
+                                  'value': '652860', 'indicator': {'id': 'AG.LND.TOTL.K2',
+                                                                   'value': 'Land area (sq. km)'}},
+                                 {'country': {'id': 'AF', 'value': 'Afghanistan'}, 'date': '2015', 'decimal': '1',
+                                  'value': '652860', 'indicator': {'id': 'AG.LND.TOTL.K2',
+                                                                   'value': 'Land area (sq. km)'}},
+                                 {'country': {'id': 'AF', 'value': 'Afghanistan'}, 'date': '2014', 'decimal': '1',
+                                  'value': '652860', 'indicator': {'id': 'AG.LND.TOTL.K2',
+                                                                   'value': 'Land area (sq. km)'}}]]
 
                     request.json = fn
                 elif url == 'http://haha/countries?format=json&per_page=10000':
@@ -98,19 +95,18 @@ class TestWorldBank:
         countries = list(countries)
         assert countries == [('ABW', 'Aruba'), ('AFG', 'Afghanistan'), ('AGO', 'Angola')]
 
-    def test_get_dataset_date_range(self, downloader):
-        dataset_date_range = get_dataset_date_range('http://haha/', downloader)
-        assert dataset_date_range == ('2013', '2016')
-
-    def test_generate_dataset(self, configuration):
+    def test_generate_dataset(self, configuration, downloader):
         base_url = Configuration.read()['base_url']
-        dataset = generate_dataset(base_url, 'AFG', 'Afghanistan', TestWorldBank.indicators, ('1960', '2016'))
+        folder = gettempdir()
+        dataset = generate_dataset(base_url, downloader, folder, 'AFG', 'Afghanistan', TestWorldBank.indicators, ['AG.LND.TOTL.K2'])
         print(dataset)
         assert dataset == {'title': 'World Bank Indicators for Afghanistan', 'groups': [{'name': 'afg'}],
-                           'data_update_frequency': '365', 'dataset_date': '01/01/1960-12/31/2016',
+                           'data_update_frequency': '365', 'dataset_date': '01/01/2014-12/31/2016',
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
                            'name': 'world-bank-indicators-for-afghanistan'}
         resources = dataset.get_resources()
+        print(resources)
         assert resources == [{'name': 'Land area (sq. km)', 'format': 'json',
                               'description': "Source: Food and Agriculture Organization, electronic files and web site.  \n   \nLand area is a country's total area... and lakes.",
-                              'url': '%scountries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000' % base_url}]
+                              'url': '%scountries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000' % base_url},
+                             {'name': 'topline', 'format': 'json', 'description': 'File for country topline numbers'}]

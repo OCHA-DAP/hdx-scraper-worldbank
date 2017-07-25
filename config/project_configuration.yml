@@ -30,3 +30,8 @@ indicator_list:
   - "NY.GDP.PCAP.PP.KD"
   - "SH.DYN.AIDS.ZS"
   - "SL.EMP.INSV.FE.ZS"
+topline_indicators:
+  - "SP.POP.TOTL"
+  - "EN.POP.DNST"
+  - "NY.GDP.PCAP.PP.CD"
+  - "AG.LND.TOTL.K2"
