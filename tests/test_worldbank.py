@@ -25,14 +25,14 @@ class TestWorldBank:
 
     @pytest.fixture(scope='function')
     def downloader(self):
-        class Request:
+        class Response:
             def json(self):
                 pass
 
         class Download:
             @staticmethod
             def download(url):
-                request = Request()
+                response = Response()
                 if url == 'http://lala/indicator/AG.LND.TOTL.K2?format=json&per_page=10000':
                     def fn():
                         return [{'pages': 1, 'per_page': '10000', 'page': 1, 'total': 1},
@@ -42,7 +42,7 @@ class TestWorldBank:
                                   'sourceNote': "Land area is a country's total area... and lakes.",
                                   'sourceOrganization': 'Food and Agriculture Organization, electronic files and web site.',
                                   'id': 'AG.LND.TOTL.K2', 'name': 'Land area (sq. km)'}]]
-                    request.json = fn
+                    response.json = fn
                 elif url == 'http://papa/countries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000':
                     def fn():
                         return [{'pages': 1, 'page': 1, 'per_page': '10000', 'total': 57},
@@ -56,7 +56,7 @@ class TestWorldBank:
                                   'value': '652860', 'indicator': {'id': 'AG.LND.TOTL.K2',
                                                                    'value': 'Land area (sq. km)'}}]]
 
-                    request.json = fn
+                    response.json = fn
                 elif url == 'http://haha/countries?format=json&per_page=10000':
                     def fn():
                         return [{'per_page': '10000', 'pages': 1, 'page': 1, 'total': 304},
@@ -81,8 +81,8 @@ class TestWorldBank:
                                   'iso2Code': 'AO', 'longitude': '13.242',
                                   'incomeLevel': {'value': 'Upper middle income', 'id': 'UMC'},
                                   'latitude': '-8.81155'}]]
-                    request.json = fn
-                return request
+                    response.json = fn
+                return response
         return Download()
 
     def test_get_indicators_and_tags(self, downloader):
