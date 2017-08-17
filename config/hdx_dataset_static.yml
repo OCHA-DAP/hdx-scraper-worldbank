@@ -1,6 +1,3 @@
-owner_org: "hdx"
-maintainer: "mcarans"
-maintainer_email: "rans@un.org"
 license_id: "cc-by-igo"
 subnational: 1  # has to be 0 or 1
 notes: "Contains data from World Bank's [data portal](http://data.worldbank.org/) covering various indicators (one per resource)."
@@ -9,5 +6,3 @@ methodology: "Registry"
 dataset_source: "World Bank"
 package_creator: "mcarans"
 private: False  # has to be True or False
-url: ~
-state: "active"  # always "active".

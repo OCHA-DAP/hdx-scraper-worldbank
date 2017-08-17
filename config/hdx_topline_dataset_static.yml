@@ -1,0 +1,8 @@
+license_id: "cc-by-igo"
+subnational: 1  # has to be 0 or 1
+notes: "Data used to update country toplines in HDX. Contains data from World Bank's [data portal](http://data.worldbank.org/)."
+caveats: ""
+methodology: "Registry"
+dataset_source: "World Bank"
+package_creator: "mcarans"
+private: False  # has to be True or False

@@ -10,14 +10,15 @@ from tempfile import gettempdir
 import pytest
 from hdx.hdx_configuration import Configuration
 
-from worldbank import generate_dataset, get_indicators_and_tags, get_countries
+from worldbank import generate_dataset, get_indicators_and_tags, get_countries, generate_topline_dataset
 
 
 class TestWorldBank:
     indicators = [('AG.LND.TOTL.K2', 'Land area (sq. km)',
                                "Land area is a country's total area... and lakes.",
                                'Food and Agriculture Organization, electronic files and web site.')]
-
+    topline_indicators = [{'indicator': 'Land area', 'source': 'World Bank', 'unit': 'sq. km', 'countryiso': 'AFG',
+                           'year': 2016, 'value': '652860'}]
     @pytest.fixture(scope='function')
     def configuration(self):
         Configuration._create(hdx_read_only=True,
@@ -97,14 +98,24 @@ class TestWorldBank:
 
     def test_generate_dataset(self, configuration, downloader):
         base_url = Configuration.read()['base_url']
-        folder = gettempdir()
-        dataset = generate_dataset(base_url, downloader, folder, 'AFG', 'Afghanistan', TestWorldBank.indicators, ['AG.LND.TOTL.K2'])
+        dataset, topline_indicators = generate_dataset(base_url, downloader, 'AFG', 'Afghanistan', TestWorldBank.indicators, ['AG.LND.TOTL.K2'])
         assert dataset == {'title': 'World Bank Indicators for Afghanistan', 'groups': [{'name': 'afg'}],
                            'data_update_frequency': '365', 'dataset_date': '01/01/2014-12/31/2016',
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
-                           'name': 'world-bank-indicators-for-afghanistan'}
+                           'name': 'world-bank-indicators-for-afghanistan',
+                           'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx'}
+        assert topline_indicators == TestWorldBank.topline_indicators
         resources = dataset.get_resources()
         assert resources == [{'name': 'Land area (sq. km)', 'format': 'json',
                               'description': "Source: Food and Agriculture Organization, electronic files and web site.  \n   \nLand area is a country's total area... and lakes.",
-                              'url': '%scountries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000' % base_url},
-                             {'name': 'topline', 'format': 'json', 'description': 'File for country topline numbers'}]
+                              'url': '%scountries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000' % base_url}]
+
+    def test_generate_topline_dataset(self, configuration):
+        folder = gettempdir()
+        dataset = generate_topline_dataset(folder, TestWorldBank.topline_indicators, ['AFG'])
+        assert dataset == {'name': 'world-bank-country-topline-indicators', 'groups': [{'name': 'afg'}],
+                           'tags': [{'name': 'indicators'}, {'name': 'World Bank'}], 'owner_org': 'hdx',
+                           'title': 'World Bank Country Topline Indicators',
+                           'maintainer': '196196be-6037-4488-8b71-d786adf4c081',
+                           'dataset_date': '01/01/2016-12/31/2016', 'data_update_frequency': '365'}
+

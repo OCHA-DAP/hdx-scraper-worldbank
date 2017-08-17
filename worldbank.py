@@ -7,10 +7,10 @@ World Bank:
 Generates World Bank datasets.
 
 """
+import csv
 import logging
 
 import re
-from json import dump
 from os.path import join
 
 from hdx.data.dataset import Dataset
@@ -60,7 +60,7 @@ def get_unit(indicator_name):
     raise HDXError('No unit for Unrecognised indicator %s' % indicator_name)
 
 
-def generate_dataset(base_url, downloader, folder, countryiso, countryname, indicators, topline_indicators):
+def generate_dataset(base_url, downloader, countryiso, countryname, indicators, topline_indicator_codes):
     """
     http://api.worldbank.org/countries/bra/indicators/NY.GNP.PCAP.CD
     """
@@ -71,23 +71,28 @@ def generate_dataset(base_url, downloader, folder, countryiso, countryname, indi
         'name': slugified_name,
         'title': title,
     })
+    dataset.set_maintainer('196196be-6037-4488-8b71-d786adf4c081')
+    dataset.set_organization('hdx')
     try:
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
-        return None
+        return None, None
     dataset.set_expected_update_frequency('Every year')
     dataset.add_tags(['indicators', 'World Bank'])
 
     earliest_year = 10000
     latest_year = 0
-    indicators_json = list()
+    topline_indicators = list()
     for indicator_code, indicator_name, indicator_note, indicator_source in indicators:
         url = '%scountries/%s/indicators/%s?format=json&per_page=10000' % (base_url, countryiso, indicator_code)
         response = downloader.download(url)
         json = response.json()
         indicator_dict = dict()
-        for yeardict in json[1]:
+        result = json[1]
+        if result is None:
+            continue
+        for yeardict in result:
             year = int(yeardict['date'])
             indicator_dict[year] = yeardict
         years = sorted(indicator_dict.keys())
@@ -97,7 +102,7 @@ def generate_dataset(base_url, downloader, folder, countryiso, countryname, indi
             latest_year = indicator_latest_year
         if indicator_earliest_year < earliest_year:
             earliest_year = indicator_earliest_year
-        if indicator_code in topline_indicators:
+        if indicator_code in topline_indicator_codes:
             indicator_year_index = len(years)
             year = None
             value = None
@@ -110,19 +115,16 @@ def generate_dataset(base_url, downloader, folder, countryiso, countryname, indi
             if value is None:
                 continue
             unit = get_unit(indicator_name)
-            indicator_json = {
-                'value': value,
-                'indicatorTypeCode': indicator_code,
-                'indicatorTypeName': indicator_name,
-                'unitCode': unit,
-                'unitName': unit,
-                'locationCode': countryiso.upper(),
-                'locationName': countryname.upper(),
-                'sourceCode': 'world-bank',
-                'sourceName': 'World Bank',
-                'time': '%d-01-01' % year
+            topline_indicator_name = indicator_name.replace(' (%s)' % unit, '')
+            topline_indicator = {
+                'countryiso': countryiso.upper(),
+                'indicator': topline_indicator_name,
+                'source': 'World Bank',
+                'year': year,
+                'unit': get_unit(indicator_name),
+                'value': value
             }
-            indicators_json.append(indicator_json)
+            topline_indicators.append(topline_indicator)
 
         resource_data = {
             'name': indicator_name,
@@ -132,27 +134,60 @@ def generate_dataset(base_url, downloader, folder, countryiso, countryname, indi
         }
         resource = Resource(resource_data)
         dataset.add_update_resource(resource)
+
+    if earliest_year == 10000:
+        logger.exception('%s has no data!' % countryname)
+        return None, None
+
+    dataset.set_dataset_year_range(earliest_year, latest_year)
+    return dataset, topline_indicators
+
+
+def generate_topline_dataset(folder, topline_indicators, country_isos):
+    title = 'World Bank Country Topline Indicators'
+    slugified_name = slugify(title).lower()
+
+    dataset = Dataset({
+        'name': slugified_name,
+        'title': title,
+    })
+    dataset.set_maintainer('196196be-6037-4488-8b71-d786adf4c081')
+    dataset.set_organization('hdx')
+    dataset.add_country_locations(country_isos)
+    dataset.set_expected_update_frequency('Every year')
+
+    earliest_year = 10000
+    latest_year = 0
+    for topline_indicator in topline_indicators:
+        year = topline_indicator['year']
+        if year > latest_year:
+            latest_year = year
+        if year < earliest_year:
+            earliest_year = year
     dataset.set_dataset_year_range(earliest_year, latest_year)
 
-    topline_json = {
-        'success': True,
-        'errorMessage': 'None',
-        'totalCount': len(indicators_json),
-        'currentPage': None,
-        'totalNumOfPages': None,
-        'pageSize': None,
-        'moreResults': None,
-        'results': indicators_json
+    dataset.add_tags(['indicators', 'World Bank'])
+    filepath = join(folder, 'worldbank_topline.csv')
+    hxl = {
+        'countryiso': '#country+code',
+        'indicator': '#indicator+name',
+        'source': '#meta+source',
+        'year': '#date+year',
+        'unit': '#indicator+unit',
+        'value': '#value+amount'
     }
-
-    filepath = join(folder, 'worldbank_topline_%s.json' % countryiso)
-    with open(filepath, 'w') as outfile:
-        dump(topline_json, outfile)
+    with open(filepath, 'w') as csvfile:
+        fieldnames = ['countryiso', 'indicator', 'source', 'year', 'unit', 'value']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow(hxl)
+        for topline_indicator in topline_indicators:
+            writer.writerow(topline_indicator)
 
     resource_data = {
-        'name': 'topline',
-        'description': 'File for country topline numbers',
-        'format': 'json'
+        'name': 'topline_indicators',
+        'description': 'Country topline indicators',
+        'format': 'csv'
     }
     resource = Resource(resource_data)
     resource.set_file_to_upload(filepath)
