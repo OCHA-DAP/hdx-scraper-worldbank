@@ -17,7 +17,8 @@ class TestWorldBank:
     indicators = [('AG.LND.TOTL.K2', 'Land area (sq. km)',
                                "Land area is a country's total area... and lakes.",
                                'Food and Agriculture Organization, electronic files and web site.')]
-    topline_indicators = [{'indicator': 'Land area', 'source': 'World Bank', 'unit': 'sq. km', 'countryiso': 'AFG',
+    topline_indicators = [{'url': 'http://papa/countries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000',
+                           'indicator': 'Land area', 'source': 'World Bank', 'unit': 'sq. km', 'countryiso': 'AFG',
                            'year': 2016, 'value': '652860'}]
     @pytest.fixture(scope='function')
     def configuration(self):
@@ -27,7 +28,8 @@ class TestWorldBank:
     @pytest.fixture(scope='function')
     def downloader(self):
         class Response:
-            def json(self):
+            @staticmethod
+            def json():
                 pass
 
         class Download:
@@ -99,7 +101,7 @@ class TestWorldBank:
     def test_generate_dataset(self, configuration, downloader):
         base_url = Configuration.read()['base_url']
         dataset, topline_indicators = generate_dataset(base_url, downloader, 'AFG', 'Afghanistan', TestWorldBank.indicators, ['AG.LND.TOTL.K2'])
-        assert dataset == {'title': 'World Bank Indicators for Afghanistan', 'groups': [{'name': 'afg'}],
+        assert dataset == {'title': 'Economic and Social Indicators', 'groups': [{'name': 'afg'}],
                            'data_update_frequency': '365', 'dataset_date': '01/01/2014-12/31/2016',
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
                            'name': 'world-bank-indicators-for-afghanistan',

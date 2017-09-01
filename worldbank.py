@@ -64,8 +64,8 @@ def generate_dataset(base_url, downloader, countryiso, countryname, indicators, 
     """
     http://api.worldbank.org/countries/bra/indicators/NY.GNP.PCAP.CD
     """
-    title = 'World Bank Indicators for %s' % countryname
-    slugified_name = slugify(title).lower()
+    title = 'Economic and Social Indicators'
+    slugified_name = slugify('World Bank Indicators for %s' % countryname).lower()
 
     dataset = Dataset({
         'name': slugified_name,
@@ -120,6 +120,7 @@ def generate_dataset(base_url, downloader, countryiso, countryname, indicators, 
                 'countryiso': countryiso.upper(),
                 'indicator': topline_indicator_name,
                 'source': 'World Bank',
+                'url': url,
                 'year': year,
                 'unit': get_unit(indicator_name),
                 'value': value
@@ -172,16 +173,19 @@ def generate_topline_dataset(folder, topline_indicators, country_isos):
         'countryiso': '#country+code',
         'indicator': '#indicator+name',
         'source': '#meta+source',
-        'year': '#date+year',
+        'url': '#meta+url',
+        'date': '#date',
         'unit': '#indicator+unit',
         'value': '#value+amount'
     }
     with open(filepath, 'w') as csvfile:
-        fieldnames = ['countryiso', 'indicator', 'source', 'year', 'unit', 'value']
+        fieldnames = ['countryiso', 'indicator', 'source', 'url', 'date', 'unit', 'value']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerow(hxl)
         for topline_indicator in topline_indicators:
+            topline_indicator['date'] = '%d-01-01' % topline_indicator['year']
+            del topline_indicator['year']
             writer.writerow(topline_indicator)
 
     resource_data = {

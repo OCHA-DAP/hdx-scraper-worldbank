@@ -1,6 +1,6 @@
 license_id: "cc-by-igo"
 subnational: 1  # has to be 0 or 1
-notes: "Contains data from World Bank's [data portal](http://data.worldbank.org/) covering various indicators (one per resource)."
+notes: "Contains data from World Bank's [data portal](http://data.worldbank.org/) covering various economic and social indicators (one per resource)."
 caveats: "The indicators' sources are mentioned in the resource descriptions."
 methodology: "Registry"
 dataset_source: "World Bank"
