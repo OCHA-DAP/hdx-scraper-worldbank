@@ -117,7 +117,7 @@ class TestWorldBank:
         dataset = generate_topline_dataset(folder, TestWorldBank.topline_indicators, ['AFG'])
         assert dataset == {'name': 'world-bank-country-topline-indicators', 'groups': [{'name': 'afg'}],
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}], 'owner_org': 'hdx',
-                           'title': 'World Bank Country Topline Indicators',
+                           'title': 'Topline Indicators',
                            'maintainer': '196196be-6037-4488-8b71-d786adf4c081',
                            'dataset_date': '01/01/2016-12/31/2016', 'data_update_frequency': '365'}
 

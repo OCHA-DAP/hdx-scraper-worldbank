@@ -145,8 +145,8 @@ def generate_dataset(base_url, downloader, countryiso, countryname, indicators, 
 
 
 def generate_topline_dataset(folder, topline_indicators, country_isos):
-    title = 'World Bank Country Topline Indicators'
-    slugified_name = slugify(title).lower()
+    title = 'Topline Indicators'
+    slugified_name = slugify('World Bank Country Topline Indicators').lower()
 
     dataset = Dataset({
         'name': slugified_name,
