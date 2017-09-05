@@ -64,7 +64,7 @@ def generate_dataset(base_url, downloader, countryiso, countryname, indicators, 
     """
     http://api.worldbank.org/countries/bra/indicators/NY.GNP.PCAP.CD
     """
-    title = 'Economic and Social Indicators'
+    title = '%s - Economic and Social Indicators' % countryname
     slugified_name = slugify('World Bank Indicators for %s' % countryname).lower()
 
     dataset = Dataset({

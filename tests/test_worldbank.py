@@ -101,7 +101,7 @@ class TestWorldBank:
     def test_generate_dataset(self, configuration, downloader):
         base_url = Configuration.read()['base_url']
         dataset, topline_indicators = generate_dataset(base_url, downloader, 'AFG', 'Afghanistan', TestWorldBank.indicators, ['AG.LND.TOTL.K2'])
-        assert dataset == {'title': 'Economic and Social Indicators', 'groups': [{'name': 'afg'}],
+        assert dataset == {'title': 'Afghanistan - Economic and Social Indicators', 'groups': [{'name': 'afg'}],
                            'data_update_frequency': '365', 'dataset_date': '01/01/2014-12/31/2016',
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
                            'name': 'world-bank-indicators-for-afghanistan',
