@@ -16,6 +16,7 @@ from os.path import join
 from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
 from hdx.data.resource import Resource
+from hdx.data.showcase import Showcase
 from slugify import slugify
 
 
@@ -48,7 +49,7 @@ def get_countries(base_url, downloader):
     json = response.json()
     for country in json[1]:
         if country['region']['value'] != 'Aggregates':
-            yield country['id'], country['name']
+            yield country['id'], country['iso2Code'], country['name']
 
 
 def get_unit(indicator_name):
@@ -60,7 +61,8 @@ def get_unit(indicator_name):
     raise HDXError('No unit for Unrecognised indicator %s' % indicator_name)
 
 
-def generate_dataset(base_url, downloader, countryiso, countryname, indicators, topline_indicator_codes):
+def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2, countryname, indicators,
+                                  topline_indicator_codes):
     """
     http://api.worldbank.org/countries/bra/indicators/NY.GNP.PCAP.CD
     """
@@ -79,7 +81,8 @@ def generate_dataset(base_url, downloader, countryiso, countryname, indicators, 
         logger.exception('%s has a problem! %s' % (countryname, e))
         return None, None
     dataset.set_expected_update_frequency('Every year')
-    dataset.add_tags(['indicators', 'World Bank'])
+    tags = ['indicators', 'World Bank']
+    dataset.add_tags(tags)
 
     earliest_year = 10000
     latest_year = 0
@@ -141,7 +144,17 @@ def generate_dataset(base_url, downloader, countryiso, countryname, indicators, 
         return None, None
 
     dataset.set_dataset_year_range(earliest_year, latest_year)
-    return dataset, topline_indicators
+
+    iso2lower = countryiso2.lower()
+    showcase = Showcase({
+        'name': '%s-showcase' % slugified_name,
+        'title': 'Indicators for %s' % countryname,
+        'notes': 'Economic and social indicators for %s' % countryname,
+        'url': 'https://data.worldbank.org/country/%s' % iso2lower,
+        'image_url': 'http://databank.worldbank.org/data/download/site-content/wdi/maps/2017/world-by-income-wdi-2017.png'
+    })
+    showcase.add_tags(tags)
+    return dataset, showcase, topline_indicators
 
 
 def generate_topline_dataset(folder, topline_indicators, country_isos):

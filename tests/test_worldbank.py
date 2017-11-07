@@ -11,7 +11,7 @@ import pytest
 from hdx.hdx_configuration import Configuration
 from hdx.hdx_locations import Locations
 
-from worldbank import generate_dataset, get_indicators_and_tags, get_countries, generate_topline_dataset
+from worldbank import generate_dataset_and_showcase, get_indicators_and_tags, get_countries, generate_topline_dataset
 
 
 class TestWorldBank:
@@ -98,11 +98,11 @@ class TestWorldBank:
     def test_get_countries(self, downloader):
         countries = get_countries('http://haha/', downloader)
         countries = list(countries)
-        assert countries == [('ABW', 'Aruba'), ('AFG', 'Afghanistan'), ('AGO', 'Angola')]
+        assert countries == [('ABW', 'AW', 'Aruba'), ('AFG', 'AF', 'Afghanistan'), ('AGO', 'AO', 'Angola')]
 
-    def test_generate_dataset(self, configuration, downloader):
+    def test_generate_dataset_and_showcase(self, configuration, downloader):
         base_url = Configuration.read()['base_url']
-        dataset, topline_indicators = generate_dataset(base_url, downloader, 'AFG', 'Afghanistan', TestWorldBank.indicators, ['AG.LND.TOTL.K2'])
+        dataset, showcase, topline_indicators = generate_dataset_and_showcase(base_url, downloader, 'AFG', 'AF', 'Afghanistan', TestWorldBank.indicators, ['AG.LND.TOTL.K2'])
         assert dataset == {'title': 'Afghanistan - Economic and Social Indicators', 'groups': [{'name': 'afg'}],
                            'data_update_frequency': '365', 'dataset_date': '01/01/2014-12/31/2016',
                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
@@ -113,6 +113,12 @@ class TestWorldBank:
         assert resources == [{'name': 'Land area (sq. km)', 'format': 'json',
                               'description': "Source: Food and Agriculture Organization, electronic files and web site.  \n   \nLand area is a country's total area... and lakes.",
                               'url': '%scountries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000' % base_url}]
+        assert showcase == {'image_url': 'http://databank.worldbank.org/data/download/site-content/wdi/maps/2017/world-by-income-wdi-2017.png',
+                            'notes': 'Economic and social indicators for Afghanistan',
+                            'title': 'Indicators for Afghanistan',
+                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
+                            'url': 'https://data.worldbank.org/country/af',
+                            'name': 'world-bank-indicators-for-afghanistan-showcase'}
 
     def test_generate_topline_dataset(self, configuration):
         folder = gettempdir()

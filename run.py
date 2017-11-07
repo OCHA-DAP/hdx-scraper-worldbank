@@ -12,7 +12,7 @@ from hdx.hdx_configuration import Configuration
 from hdx.facades.hdx_scraperwiki import facade
 from hdx.utilities.downloader import Download
 
-from worldbank import generate_dataset, get_countries, get_indicators_and_tags, generate_topline_dataset
+from worldbank import generate_dataset_and_showcase, get_countries, get_indicators_and_tags, generate_topline_dataset
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +28,17 @@ def main():
 
         country_isos = list()
         topline_indicators = list()
-        for countryiso, countryname in get_countries(base_url, downloader):
-            dataset, country_topline_indicators = generate_dataset(base_url, downloader, countryiso, countryname,
-                                                                   indicators, topline_indicator_names)
+        for countryiso, countryiso2, countryname in get_countries(base_url, downloader):
+            dataset, showcase, country_topline_indicators = \
+                generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2, countryname, indicators,
+                                              topline_indicator_names)
             if dataset is not None:
                 logger.info('Adding %s' % countryname)
                 dataset.add_tags(tags)
                 dataset.update_from_yaml()
                 dataset.create_in_hdx()
+                showcase.create_in_hdx()
+                showcase.add_dataset(dataset)
                 topline_indicators.extend(country_topline_indicators)
                 country_isos.append(countryiso)
 
@@ -44,5 +47,6 @@ def main():
     dataset.update_from_yaml(path=join('config', 'hdx_topline_dataset_static.yml'))
     dataset.create_in_hdx()
 
+
 if __name__ == '__main__':
-    facade(main, hdx_site='test', project_config_yaml=join('config', 'project_configuration.yml'))
+    facade(main, hdx_site='feature', project_config_yaml=join('config', 'project_configuration.yml'))
