@@ -8,11 +8,14 @@ import logging
 from os.path import join
 from tempfile import gettempdir
 
+from hdx.facades import logging_kwargs
 from hdx.hdx_configuration import Configuration
-from hdx.facades.hdx_scraperwiki import facade
 from hdx.utilities.downloader import Download
 
 from worldbank import generate_dataset_and_showcase, get_countries, get_indicators_and_tags, generate_topline_dataset
+
+logging_kwargs['smtp_config_yaml'] = join('config', 'smtp_configuration.yml')
+from hdx.facades.hdx_scraperwiki import facade
 
 logger = logging.getLogger(__name__)
 
