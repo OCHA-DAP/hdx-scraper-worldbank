@@ -79,7 +79,7 @@ def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2,
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
-        return None, None
+        return None, None, None
     dataset.set_expected_update_frequency('Every year')
     tags = ['indicators', 'World Bank']
     dataset.add_tags(tags)
@@ -141,7 +141,7 @@ def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2,
 
     if earliest_year == 10000:
         logger.exception('%s has no data!' % countryname)
-        return None, None
+        return None, None, None
 
     dataset.set_dataset_year_range(earliest_year, latest_year)
 
