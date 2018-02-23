@@ -5,7 +5,7 @@ Top level script. Calls other functions that generate datasets that this script 
 
 """
 import logging
-from os.path import join
+from os.path import join, expanduser
 from tempfile import gettempdir
 
 from hdx.hdx_configuration import Configuration
@@ -53,4 +53,4 @@ def main():
 
 
 if __name__ == '__main__':
-    facade(main, hdx_site='feature', project_config_yaml=join('config', 'project_configuration.yml'))
+    facade(main, hdx_site='feature', user_agent_config_yaml=join(expanduser('~'), '.worldbankuseragent.yml'), project_config_yaml=join('config', 'project_configuration.yml'))
