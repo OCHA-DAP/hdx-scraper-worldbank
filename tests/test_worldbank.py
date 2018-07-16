@@ -105,8 +105,8 @@ class TestWorldBank:
         dataset, showcase, topline_indicators = generate_dataset_and_showcase(base_url, downloader, 'AFG', 'AF', 'Afghanistan', TestWorldBank.indicators, ['AG.LND.TOTL.K2'])
         assert dataset == {'title': 'Afghanistan - Economic and Social Indicators', 'groups': [{'name': 'afg'}],
                            'data_update_frequency': '365', 'dataset_date': '01/01/2014-12/31/2016',
-                           'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
-                           'name': 'world-bank-indicators-for-afghanistan',
+                           'tags': [{'name': 'indicators'}],
+                           'name': 'world-bank-indicators-for-afghanistan', 'subnational': '0',
                            'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx'}
         assert topline_indicators == TestWorldBank.topline_indicators
         resources = dataset.get_resources()
@@ -116,7 +116,7 @@ class TestWorldBank:
         assert showcase == {'image_url': 'http://databank.worldbank.org/data/download/site-content/wdi/maps/2017/world-by-income-wdi-2017.png',
                             'notes': 'Economic and social indicators for Afghanistan',
                             'title': 'Indicators for Afghanistan',
-                            'tags': [{'name': 'indicators'}, {'name': 'World Bank'}],
+                            'tags': [{'name': 'indicators'}],
                             'url': 'https://data.worldbank.org/country/af',
                             'name': 'world-bank-indicators-for-afghanistan-showcase'}
 
@@ -124,8 +124,8 @@ class TestWorldBank:
         folder = gettempdir()
         dataset = generate_topline_dataset(folder, TestWorldBank.topline_indicators, ['AFG'])
         assert dataset == {'name': 'world-bank-country-topline-indicators', 'groups': [{'name': 'afg'}],
-                           'tags': [{'name': 'indicators'}, {'name': 'World Bank'}], 'owner_org': 'hdx',
-                           'title': 'Topline Indicators',
+                           'tags': [{'name': 'indicators'}], 'owner_org': 'hdx',
+                           'title': 'Topline Indicators', 'subnational': '0',
                            'maintainer': '196196be-6037-4488-8b71-d786adf4c081',
                            'dataset_date': '01/01/2016-12/31/2016', 'data_update_frequency': '365'}
 

@@ -39,8 +39,12 @@ def main():
             if dataset is not None:
                 logger.info('Adding %s' % countryname)
                 dataset.add_tags(tags)
+                try:
+                    dataset.clean_dataset_tags()
+                except:
+                    pass
                 dataset.update_from_yaml()
-                dataset.create_in_hdx()
+                dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
                 showcase.create_in_hdx()
                 showcase.add_dataset(dataset)
                 topline_indicators.extend(country_topline_indicators)

@@ -17,6 +17,7 @@ from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
 from hdx.data.resource import Resource
 from hdx.data.showcase import Showcase
+from hdx.utilities.downloader import DownloadError
 from slugify import slugify
 
 
@@ -75,13 +76,14 @@ def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2,
     })
     dataset.set_maintainer('196196be-6037-4488-8b71-d786adf4c081')
     dataset.set_organization('hdx')
+    dataset.set_subnational(False)
     try:
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
         return None, None, None
     dataset.set_expected_update_frequency('Every year')
-    tags = ['indicators', 'World Bank']
+    tags = ['indicators']
     dataset.add_tags(tags)
 
     earliest_year = 10000
@@ -167,6 +169,7 @@ def generate_topline_dataset(folder, topline_indicators, country_isos):
     })
     dataset.set_maintainer('196196be-6037-4488-8b71-d786adf4c081')
     dataset.set_organization('hdx')
+    dataset.set_subnational(False)
     dataset.add_country_locations(country_isos)
     dataset.set_expected_update_frequency('Every year')
 
@@ -180,7 +183,7 @@ def generate_topline_dataset(folder, topline_indicators, country_isos):
             earliest_year = year
     dataset.set_dataset_year_range(earliest_year, latest_year)
 
-    dataset.add_tags(['indicators', 'World Bank'])
+    dataset.add_tags(['indicators'])
     filepath = join(folder, 'worldbank_topline.csv')
     hxl = {
         'countryiso': '#country+code',
