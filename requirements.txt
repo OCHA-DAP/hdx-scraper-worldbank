@@ -1,2 +1,2 @@
 awesome-slugify==1.6.5
-hdx-python-api==3.1.2
+hdx-python-api==3.2.1
