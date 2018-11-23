@@ -110,9 +110,8 @@ class TestWorldBank:
                            'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx'}
         assert topline_indicators == TestWorldBank.topline_indicators
         resources = dataset.get_resources()
-        assert resources == [{'name': 'Land area (sq. km)', 'format': 'json',
-                              'description': "Source: Food and Agriculture Organization, electronic files and web site.  \n   \nLand area is a country's total area... and lakes.",
-                              'url': '%scountries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000' % base_url}]
+        assert resources == [{'name': 'Land area (sq. km)', 'description': "From API. Source: Food and Agriculture Organization, electronic files and web site.  \n   \nLand area is a country's total area... and lakes.", 'url': 'http://papa/countries/AFG/indicators/AG.LND.TOTL.K2?format=json&per_page=10000', 'format': 'json'},
+                             {'name': 'All Indicators', 'description': 'HXLated csv containing all the indicators in each JSON resource below', 'format': 'csv'}]
         assert showcase == {'image_url': 'http://databank.worldbank.org/data/download/site-content/wdi/maps/2017/world-by-income-wdi-2017.png',
                             'notes': 'Economic and social indicators for Afghanistan',
                             'title': 'Indicators for Afghanistan',

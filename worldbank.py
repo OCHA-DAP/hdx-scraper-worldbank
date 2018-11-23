@@ -17,7 +17,10 @@ from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
 from hdx.data.resource import Resource
 from hdx.data.showcase import Showcase
+from hdx.location.country import Country
+from hdx.utilities.dictandlist import write_list_to_csv
 from hdx.utilities.downloader import DownloadError
+from hdx.utilities.path import temp_dir
 from slugify import slugify
 
 
@@ -86,9 +89,11 @@ def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2,
     tags = ['indicators']
     dataset.add_tags(tags)
 
+    tmpdir = temp_dir()
     earliest_year = 10000
     latest_year = 0
     topline_indicators = list()
+    rows = list()
     for indicator_code, indicator_name, indicator_note, indicator_source in indicators:
         url = '%scountries/%s/indicators/%s?format=json&per_page=10000' % (base_url, countryiso, indicator_code)
         response = downloader.download(url)
@@ -97,9 +102,12 @@ def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2,
         result = json[1]
         if result is None:
             continue
-        for yeardict in result:
-            year = int(yeardict['date'])
-            indicator_dict[year] = yeardict
+        for jsonrow in result:
+            year = int(jsonrow['date'])
+            indicator_dict[year] = jsonrow
+            rows.append({'Country Name': countryname, 'Country ISO3': countryiso, 'Year': year,
+                         'Indicator Name': indicator_name, 'Indicator Code': indicator_code,
+                         'Value': jsonrow['value']})
         years = sorted(indicator_dict.keys())
         indicator_earliest_year = years[0]
         indicator_latest_year = years[-1]
@@ -133,13 +141,29 @@ def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2,
             topline_indicators.append(topline_indicator)
 
         resource_data = {
-            'name': indicator_name,
-            'description': 'Source: %s  \n   \n%s' % (indicator_source, indicator_note),
-            'format': 'json',
+            'name': '%s' % indicator_name,
+            'description': 'From API. Source: %s  \n   \n%s' % (indicator_source, indicator_note),
             'url': url
         }
         resource = Resource(resource_data)
+        resource.set_file_type('json')
         dataset.add_update_resource(resource)
+
+    headers = ['Country Name', 'Country ISO3', 'Year', 'Indicator Name', 'Indicator Code', 'Value']
+    hxlrow = {'Country Name': '#country+name', 'Country ISO3': '#country+code', 'Year': '#date+year',
+              'Indicator Name': '#indicator+name', 'Indicator Code': '#indicator+code', 'Value': '#indicator+num'}
+    rows.insert(0, hxlrow)
+    filepath = join(tmpdir, 'all_indicators_%s.csv' % countryiso)
+    write_list_to_csv(rows, filepath, headers=headers)
+
+    resource_data = {
+        'name': 'All Indicators',
+        'description': 'HXLated csv containing all the indicators in each JSON resource below',
+    }
+    resource = Resource(resource_data)
+    resource.set_file_type('csv')
+    resource.set_file_to_upload(filepath)
+    dataset.add_update_resource(resource)
 
     if earliest_year == 10000:
         logger.exception('%s has no data!' % countryname)

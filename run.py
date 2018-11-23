@@ -41,7 +41,17 @@ def main():
                 dataset.add_tags(tags)
                 dataset.clean_dataset_tags()
                 dataset.update_from_yaml()
-                dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
+                dataset.create_in_hdx(remove_additional_resources=True)
+                resources = dataset.get_resources()
+                if resources[0].get_file_type() != 'CSV':
+                    resource_ids = list()
+                    for resource in resources:
+                        resource_id = resource['id']
+                        if resource.get_file_type() == 'CSV':
+                            resource_ids.insert(0, resource_id)
+                        else:
+                            resource_ids.append(resource_id)
+                    dataset.reorder_resources(resource_ids)
                 showcase.create_in_hdx()
                 showcase.add_dataset(dataset)
                 topline_indicators.extend(country_topline_indicators)
