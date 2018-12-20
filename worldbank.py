@@ -65,7 +65,7 @@ def get_unit(indicator_name):
     raise HDXError('No unit for Unrecognised indicator %s' % indicator_name)
 
 
-def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2, countryname, indicators,
+def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname, indicators,
                                   topline_indicator_codes):
     """
     http://api.worldbank.org/countries/bra/indicators/NY.GNP.PCAP.CD
@@ -89,7 +89,6 @@ def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2,
     tags = ['indicators']
     dataset.add_tags(tags)
 
-    tmpdir = temp_dir()
     earliest_year = 10000
     latest_year = 0
     topline_indicators = list()
@@ -153,7 +152,7 @@ def generate_dataset_and_showcase(base_url, downloader, countryiso, countryiso2,
     hxlrow = {'Country Name': '#country+name', 'Country ISO3': '#country+code', 'Year': '#date+year',
               'Indicator Name': '#indicator+name', 'Indicator Code': '#indicator+code', 'Value': '#indicator+num'}
     rows.insert(0, hxlrow)
-    filepath = join(tmpdir, 'all_indicators_%s.csv' % countryiso)
+    filepath = join(folder, 'all_indicators_%s.csv' % countryiso)
     write_list_to_csv(rows, filepath, headers=headers)
 
     resource_data = {
