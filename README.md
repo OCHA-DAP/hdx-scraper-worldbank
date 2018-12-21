@@ -1,7 +1,7 @@
 ### Collector for World Bank Datasets
 [![Build Status](https://travis-ci.org/OCHA-DAP/hdx-scraper-worldbank.svg?branch=master&ts=1)](https://travis-ci.org/OCHA-DAP/hdx-scraper-worldbank) [![Coverage Status](https://coveralls.io/repos/github/OCHA-DAP/hdx-scraper-worldbank/badge.svg?branch=master&ts=1)](https://coveralls.io/github/OCHA-DAP/hdx-scraper-worldbank?branch=master)
 
-This script connects to the [World Bank](http://data.worldbank.org/) and extracts data country by country creating a dataset per country in HDX. It makes around 6000 reads from the World Bank API and then 1200 read/writes (API calls) to HDX in a one hour period. It creates around 6000 temporary files each under 150Kb. It runs every year. 
+This script connects to the [World Bank](http://data.worldbank.org/) and extracts data country by country creating a dataset per country in HDX. It makes around 6000 reads from the World Bank API and then 1200 read/writes (API calls) to HDX in a one hour period. It creates around 200 temporary files each under 150Kb. It runs every year. 
 
 
 ### Usage
