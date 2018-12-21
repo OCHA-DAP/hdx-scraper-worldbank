@@ -17,10 +17,7 @@ from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
 from hdx.data.resource import Resource
 from hdx.data.showcase import Showcase
-from hdx.location.country import Country
 from hdx.utilities.dictandlist import write_list_to_csv
-from hdx.utilities.downloader import DownloadError
-from hdx.utilities.path import temp_dir
 from slugify import slugify
 
 
