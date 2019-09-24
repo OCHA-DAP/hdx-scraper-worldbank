@@ -1,5 +1,4 @@
 license_id: "cc-by-igo"
-notes: "Contains data from World Bank's [data portal](http://data.worldbank.org/) covering various economic and social indicators (one per resource)."
 caveats: "The indicators' sources are mentioned in the resource descriptions."
 methodology: "Registry"
 dataset_source: "World Bank"

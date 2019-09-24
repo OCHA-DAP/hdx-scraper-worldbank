@@ -11,41 +11,52 @@ import csv
 import logging
 
 import re
+from itertools import zip_longest
 from os.path import join
 
 from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
 from hdx.data.resource import Resource
 from hdx.data.showcase import Showcase
-from hdx.utilities.dictandlist import write_list_to_csv
+from hdx.utilities.dictandlist import write_list_to_csv, dict_of_lists_add
 from slugify import slugify
 
 
 logger = logging.getLogger(__name__)
 
 
-def get_indicators_and_tags(base_url, downloader, indicator_list):
-    indicators = list()
-    tags = list()
-    for indicator in indicator_list:
-        url = '%sindicator/%s?format=json&per_page=10000' % (base_url, indicator)
+def get_topics_metadata(base_url, downloader):
+    url = '%sv2/en/topic?format=json&per_page=10000' % base_url
+    response = downloader.download(url)
+    json = response.json()
+    topics = json[1]
+    for topic in topics:
+        tags = list()
+        tag_name = topic['value']
+        if '&' in tag_name:
+            tag_names = tag_name.split(' & ')
+            for tag_name in tag_names:
+                tags.append(tag_name.strip())
+        else:
+            tags.append(tag_name.strip())
+        topic['tags'] = tags
+        url = '%sv2/en/topic/%s/indicator?format=json&per_page=10000' % (base_url, topic['id'])
         response = downloader.download(url)
         json = response.json()
-        result = json[1][0]
-        for tag in result['topics']:
-            tag_name = tag['value']
-            if '&' in tag_name:
-                tag_names = tag_name.split(' & ')
-                for tag_name in tag_names:
-                    tags.append(tag_name.strip())
-            else:
-                tags.append(tag_name.strip())
-        indicators.append((indicator, result['name'], result['sourceNote'], result['sourceOrganization']))
-    return indicators, tags
+        sources = dict()
+        for indicator in json[1]:
+            dict_of_lists_add(sources, indicator['source']['id'], indicator)
+        topic['sources'] = sources
+    return topics
+
+
+def get_topic(base_url, downloader, topic):
+    url = '%sv2/en/topic/%s?downloadformat=csv' % (base_url, topic['id'])
+    response = downloader.download(url)
 
 
 def get_countries(base_url, downloader):
-    url = '%scountries?format=json&per_page=10000' % base_url
+    url = '%sv2/en/country?format=json&per_page=10000' % base_url
     response = downloader.download(url)
     json = response.json()
     for country in json[1]:
@@ -62,16 +73,17 @@ def get_unit(indicator_name):
     raise HDXError('No unit for Unrecognised indicator %s' % indicator_name)
 
 
-def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname, indicators,
+def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname, topic,
                                   topline_indicator_codes):
     """
-    http://api.worldbank.org/countries/bra/indicators/NY.GNP.PCAP.CD
     """
-    title = '%s - Economic and Social Indicators' % countryname
-    slugified_name = slugify('World Bank Indicators for %s' % countryname).lower()
+    topicname = topic['value']
+    title = '%s - %s' % (countryname, topicname)
+    slugified_name = slugify('World Bank %s Indicators for %s' % (topicname, countryname)).lower()
 
     dataset = Dataset({
         'name': slugified_name,
+        'notes': "%s\n\nContains data from the World Bank's [data portal](http://data.worldbank.org/)." % topic['sourceNote'],
         'title': title,
     })
     dataset.set_maintainer('196196be-6037-4488-8b71-d786adf4c081')
@@ -83,13 +95,49 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
         logger.exception('%s has a problem! %s' % (countryname, e))
         return None, None, None
     dataset.set_expected_update_frequency('Every year')
-    tags = ['indicators']
+    tags = topic['tags']
     dataset.add_tags(tags)
 
     earliest_year = 10000
     latest_year = 0
     topline_indicators = list()
     rows = list()
+
+    def add_rows(jsondata):
+        for metadata in jsondata:
+            value = metadata['value']
+            if value is None:
+                continue
+            indicator_code = metadata['indicator']['id']
+            indicator_name = metadata['indicator']['value']
+            year = int(metadata['date'])
+            rows.append({'Country Name': countryname, 'Country ISO3': countryiso, 'Year': year,
+                         'Indicator Name': indicator_name, 'Indicator Code': indicator_code,
+                         'Value': value})
+    'http://api.worldbank.org/v2/en/en/topic/1?downloadformat=csv'
+    start_url = '%sv2/en/country/%s/indicator/' % (base_url, countryiso)
+    for source_id in topic['sources']:
+        indicator_list = topic['sources'][source_id]
+        indicator_list_len = len(indicator_list)
+        for i in range(0, indicator_list_len, 100):
+            ie = min(i + 100, indicator_list_len)
+            indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie]])
+            url = '%s%s?source=%s&format=json&per_page=10000' % (start_url, indicators_string, source_id)
+            response = downloader.download(url)
+            json = response.json()
+            total = json[0]['total']
+            add_rows(json[1])
+            for page in range(2, total):
+                url = '%s%s?source=%s&format=json&per_page=10000&page=%d' % (start_url, indicators_string, source_id, page)
+                response = downloader.download(url)
+                json = response.json()
+                add_rows(json[1])
+
+    url = '%sv2/en/sources/2/series/all/country/%s?format=json&per_page=10000' % (base_url, countryiso)
+    response = downloader.download(url)
+    json = response.json()
+
+
     for indicator_code, indicator_name, indicator_note, indicator_source in indicators:
         url = '%scountries/%s/indicators/%s?format=json&per_page=10000' % (base_url, countryiso, indicator_code)
         response = downloader.download(url)
