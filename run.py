@@ -11,7 +11,8 @@ from hdx.hdx_configuration import Configuration
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import temp_dir
 
-from worldbank import get_countries, get_topics_metadata, generate_dataset_and_showcase, generate_topline_dataset
+from worldbank import get_countries, get_topics_metadata, generate_dataset_and_showcase, generate_topline_dataset, \
+    get_topic
 
 from hdx.facades.simple import facade
 
@@ -30,7 +31,7 @@ def main():
             country_isos = list()
             topline_indicators = list()
             for topic in get_topics_metadata(base_url, downloader):
-
+                get_topic(base_url, downloader, topic)
                 for countryiso, countryiso2, countryname in get_countries(base_url, downloader):
                     dataset, showcase, country_topline_indicators = \
                         generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname,

@@ -43,16 +43,18 @@ def get_topics_metadata(base_url, downloader):
         url = '%sv2/en/topic/%s/indicator?format=json&per_page=10000' % (base_url, topic['id'])
         response = downloader.download(url)
         json = response.json()
-        sources = dict()
+        indicators = dict()
         for indicator in json[1]:
-            dict_of_lists_add(sources, indicator['source']['id'], indicator)
-        topic['sources'] = sources
+            indicators[indicator['id']] = indicator['sourceNote']
+        topic['indicators'] = indicator
     return topics
 
 
 def get_topic(base_url, downloader, topic):
     url = '%sv2/en/topic/%s?downloadformat=csv' % (base_url, topic['id'])
-    response = downloader.download(url)
+    for row in downloader.get_tabular_rows(url):
+        print(row)
+
 
 
 def get_countries(base_url, downloader):
