@@ -11,7 +11,6 @@ import csv
 import logging
 
 import re
-from itertools import zip_longest
 from os.path import join
 
 from hdx.data.dataset import Dataset
@@ -23,16 +22,31 @@ from slugify import slugify
 
 
 logger = logging.getLogger(__name__)
+indicator_limit = 60
+character_limit = 1500
+tag_mappings = {'financial sector': 'economics', 'social protection': 'socioeconomics', 'private sector': 'economics',
+                'public sector': 'economics', 'science': 'economics',
+                'millenium development goals': 'millennium development goals - mdg', 'external debt': 'economics'}
 
 
-def get_topics_metadata(base_url, downloader):
+def get_topics(base_url, downloader):
+    url = '%sv2/en/sources?format=json&per_page=10000' % base_url
+    response = downloader.download(url)
+    json = response.json()
+    valid_sources = list()
+    for source in json[1]:
+        if source['dataavailability'] != 'Y':
+            continue
+        if 'archive' in source['name'].lower():
+            continue
+        valid_sources.append(source['id'])
     url = '%sv2/en/topic?format=json&per_page=10000' % base_url
     response = downloader.download(url)
     json = response.json()
     topics = json[1]
     for topic in topics:
         tags = list()
-        tag_name = topic['value']
+        tag_name = topic['value'].lower()
         if '&' in tag_name:
             tag_names = tag_name.split(' & ')
             for tag_name in tag_names:
@@ -45,14 +59,12 @@ def get_topics_metadata(base_url, downloader):
         json = response.json()
         sources = dict()
         for indicator in json[1]:
+            source_id = indicator['source']['id']
+            if source_id not in valid_sources:
+                continue
             dict_of_lists_add(sources, indicator['source']['id'], indicator)
         topic['sources'] = sources
     return topics
-
-
-def get_topic(base_url, downloader, topic):
-    url = '%sv2/en/topic/%s?downloadformat=csv' % (base_url, topic['id'])
-    response = downloader.download(url)
 
 
 def get_countries(base_url, downloader):
@@ -77,7 +89,7 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
                                   topline_indicator_codes):
     """
     """
-    topicname = topic['value']
+    topicname = topic['value'].replace('&', 'and')
     title = '%s - %s' % (countryname, topicname)
     slugified_name = slugify('World Bank %s Indicators for %s' % (topicname, countryname)).lower()
 
@@ -96,14 +108,19 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
         return None, None, None
     dataset.set_expected_update_frequency('Every year')
     tags = topic['tags']
+    for i, tag in enumerate(tags):
+        if tag in tag_mappings:
+            tags[i] = tag_mappings[tag]
     dataset.add_tags(tags)
 
     earliest_year = 10000
     latest_year = 0
-    topline_indicators = list()
+    topline_indicators = dict()
     rows = list()
 
     def add_rows(jsondata):
+        nonlocal earliest_year
+        nonlocal latest_year
         for metadata in jsondata:
             value = metadata['value']
             if value is None:
@@ -111,98 +128,70 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
             indicator_code = metadata['indicator']['id']
             indicator_name = metadata['indicator']['value']
             year = int(metadata['date'])
+            if year < earliest_year:
+                earliest_year = year
+            elif year > latest_year:
+                latest_year = year
             rows.append({'Country Name': countryname, 'Country ISO3': countryiso, 'Year': year,
                          'Indicator Name': indicator_name, 'Indicator Code': indicator_code,
                          'Value': value})
-    'http://api.worldbank.org/v2/en/en/topic/1?downloadformat=csv'
+            if indicator_code in topline_indicator_codes:
+                topline_indicator = topline_indicators.get(indicator_code)
+                if topline_indicator is None:
+                    topline_year = 0
+                else:
+                    topline_year = topline_indicator['year']
+                if year > topline_year:
+                    unit = get_unit(indicator_name)
+                    topline_indicator_name = indicator_name.replace(' (%s)' % unit, '')
+                    topline_indicator = {
+                        'countryiso': countryiso.upper(),
+                        'indicator': topline_indicator_name,
+                        'source': 'World Bank',
+                        'url': url,
+                        'year': year,
+                        'unit': get_unit(indicator_name),
+                        'value': value
+                    }
+                    topline_indicators[indicator_code] = topline_indicator
+
     start_url = '%sv2/en/country/%s/indicator/' % (base_url, countryiso)
     for source_id in topic['sources']:
         indicator_list = topic['sources'][source_id]
         indicator_list_len = len(indicator_list)
-        for i in range(0, indicator_list_len, 100):
-            ie = min(i + 100, indicator_list_len)
+        i = 0
+        while i < indicator_list_len:
+            ie = min(i + indicator_limit, indicator_list_len)
             indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie]])
+            if len(indicators_string) > character_limit:
+                indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie-5]])
+                i -= 5
             url = '%s%s?source=%s&format=json&per_page=10000' % (start_url, indicators_string, source_id)
             response = downloader.download(url)
             json = response.json()
-            total = json[0]['total']
+            if json[0]['total'] == 0:
+                i += indicator_limit
+                continue
+            pages = json[0]['pages']
             add_rows(json[1])
-            for page in range(2, total):
+            for page in range(2, pages):
                 url = '%s%s?source=%s&format=json&per_page=10000&page=%d' % (start_url, indicators_string, source_id, page)
                 response = downloader.download(url)
                 json = response.json()
                 add_rows(json[1])
-
-    url = '%sv2/en/sources/2/series/all/country/%s?format=json&per_page=10000' % (base_url, countryiso)
-    response = downloader.download(url)
-    json = response.json()
-
-
-    for indicator_code, indicator_name, indicator_note, indicator_source in indicators:
-        url = '%scountries/%s/indicators/%s?format=json&per_page=10000' % (base_url, countryiso, indicator_code)
-        response = downloader.download(url)
-        json = response.json()
-        indicator_dict = dict()
-        result = json[1]
-        if result is None:
-            continue
-        for jsonrow in result:
-            year = int(jsonrow['date'])
-            indicator_dict[year] = jsonrow
-            rows.append({'Country Name': countryname, 'Country ISO3': countryiso, 'Year': year,
-                         'Indicator Name': indicator_name, 'Indicator Code': indicator_code,
-                         'Value': jsonrow['value']})
-        years = sorted(indicator_dict.keys())
-        indicator_earliest_year = years[0]
-        indicator_latest_year = years[-1]
-        if indicator_latest_year > latest_year:
-            latest_year = indicator_latest_year
-        if indicator_earliest_year < earliest_year:
-            earliest_year = indicator_earliest_year
-        if indicator_code in topline_indicator_codes:
-            indicator_year_index = len(years)
-            year = None
-            value = None
-            while indicator_year_index != 0:
-                indicator_year_index -= 1
-                year = years[indicator_year_index]
-                value = indicator_dict[year]['value']
-                if value is not None:
-                    break
-            if value is None:
-                continue
-            unit = get_unit(indicator_name)
-            topline_indicator_name = indicator_name.replace(' (%s)' % unit, '')
-            topline_indicator = {
-                'countryiso': countryiso.upper(),
-                'indicator': topline_indicator_name,
-                'source': 'World Bank',
-                'url': url,
-                'year': year,
-                'unit': get_unit(indicator_name),
-                'value': value
-            }
-            topline_indicators.append(topline_indicator)
-
-        resource_data = {
-            'name': '%s' % indicator_name,
-            'description': 'From API. Source: %s  \n   \n%s' % (indicator_source, indicator_note),
-            'url': url
-        }
-        resource = Resource(resource_data)
-        resource.set_file_type('json')
-        dataset.add_update_resource(resource)
+            i += indicator_limit
 
     headers = ['Country Name', 'Country ISO3', 'Year', 'Indicator Name', 'Indicator Code', 'Value']
     hxlrow = {'Country Name': '#country+name', 'Country ISO3': '#country+code', 'Year': '#date+year',
               'Indicator Name': '#indicator+name', 'Indicator Code': '#indicator+code', 'Value': '#indicator+num'}
     rows.insert(0, hxlrow)
-    filepath = join(folder, 'all_indicators_%s.csv' % countryiso)
+    slug_topicname = slugify(topicname)
+    filepath = join(folder, '%s_%s.csv' % (slug_topicname, countryiso))
     write_list_to_csv(rows, filepath, headers=headers)
 
     resource_data = {
-        'name': 'All Indicators',
-        'description': 'HXLated csv containing all the indicators in each JSON resource below',
+        'name': topicname,
+        'description': 'HXLated csv containing all the %s indicators' % topicname,
     }
     resource = Resource(resource_data)
     resource.set_file_type('csv')
@@ -215,13 +204,13 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
 
     dataset.set_dataset_year_range(earliest_year, latest_year)
 
-    iso2lower = countryiso2.lower()
+    iso2upper = countryiso2.upper()
     showcase = Showcase({
         'name': '%s-showcase' % slugified_name,
-        'title': 'Indicators for %s' % countryname,
-        'notes': 'Economic and social indicators for %s' % countryname,
-        'url': 'https://data.worldbank.org/country/%s' % iso2lower,
-        'image_url': 'http://databank.worldbank.org/data/download/site-content/wdi/maps/2017/world-by-income-wdi-2017.png'
+        'title': '%s indicators for %s' % (topicname, countryname),
+        'notes': '%s indicators for %s' % (topicname, countryname),
+        'url': 'https://data.worldbank.org/topic/%s?locations=%s' % (slug_topicname, iso2upper),
+        'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg'
     })
     showcase.add_tags(tags)
     return dataset, showcase, topline_indicators
@@ -243,7 +232,7 @@ def generate_topline_dataset(folder, topline_indicators, country_isos):
 
     earliest_year = 10000
     latest_year = 0
-    for topline_indicator in topline_indicators:
+    for topline_indicator in topline_indicators.values():
         year = topline_indicator['year']
         if year > latest_year:
             latest_year = year
