@@ -82,11 +82,11 @@ def get_unit(indicator_name):
         return unit_regexp.group(1)
     if 'population' in indicator_name.lower():
         return 'people'
-    raise HDXError('No unit for Unrecognised indicator %s' % indicator_name)
+    raise ValueError('No unit for Unrecognised indicator %s' % indicator_name)
 
 
 def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname, topic,
-                                  topline_indicator_codes):
+                                  topline_indicator_codes, topline_indicators):
     """
     """
     topicname = topic['value'].replace('&', 'and')
@@ -105,7 +105,7 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
-        return None, None, None
+        return None, None
     dataset.set_expected_update_frequency('Every year')
     tags = topic['tags']
     for i, tag in enumerate(tags):
@@ -115,7 +115,6 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
 
     earliest_year = 10000
     latest_year = 0
-    topline_indicators = dict()
     rows = list()
 
     def add_rows(jsondata):
@@ -172,18 +171,14 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
             if json[0]['total'] == 0:
                 i += indicator_limit
                 continue
-            pages = json[0]['pages']
+            if json[0]['pages'] != 1:
+                raise ValueError('Not expecting more than one page!')
             add_rows(json[1])
-            for page in range(2, pages):
-                url = '%s%s?source=%s&format=json&per_page=10000&page=%d' % (start_url, indicators_string, source_id, page)
-                response = downloader.download(url)
-                json = response.json()
-                add_rows(json[1])
             i += indicator_limit
 
     headers = ['Country Name', 'Country ISO3', 'Year', 'Indicator Name', 'Indicator Code', 'Value']
     hxlrow = {'Country Name': '#country+name', 'Country ISO3': '#country+code', 'Year': '#date+year',
-              'Indicator Name': '#indicator+name', 'Indicator Code': '#indicator+code', 'Value': '#indicator+num'}
+              'Indicator Name': '#indicator+name', 'Indicator Code': '#indicator+code', 'Value': '#indicator+value+num'}
     rows.insert(0, hxlrow)
     slug_topicname = slugify(topicname)
     filepath = join(folder, '%s_%s.csv' % (slug_topicname, countryiso))
@@ -200,7 +195,7 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
 
     if earliest_year == 10000:
         logger.exception('%s has no data!' % countryname)
-        return None, None, None
+        return None, None
 
     dataset.set_dataset_year_range(earliest_year, latest_year)
 
@@ -213,7 +208,7 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
         'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg'
     })
     showcase.add_tags(tags)
-    return dataset, showcase, topline_indicators
+    return dataset, showcase
 
 
 def generate_topline_dataset(folder, topline_indicators, country_isos):
@@ -232,7 +227,7 @@ def generate_topline_dataset(folder, topline_indicators, country_isos):
 
     earliest_year = 10000
     latest_year = 0
-    for topline_indicator in topline_indicators.values():
+    for topline_indicator in topline_indicators:
         year = topline_indicator['year']
         if year > latest_year:
             latest_year = year

@@ -30,12 +30,11 @@ def main():
             country_isos = list()
             topline_indicators = list()
             for countryiso, countryiso2, countryname in get_countries(base_url, downloader):
-                if countryiso != 'AFG':  # Remove!
-                    continue
+                topline_indicators_dict = dict()
                 for topic in get_topics(base_url, downloader):
-                    dataset, showcase, dataset_topline_indicators = \
+                    dataset, showcase = \
                         generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname,
-                                                      topic, topline_indicator_names)
+                                                      topic, topline_indicator_names, topline_indicators_dict)
                     if dataset is not None:
                         logger.info('Adding %s' % countryname)
                         dataset.update_from_yaml()
@@ -52,8 +51,8 @@ def main():
                             dataset.reorder_resources(resource_ids)
                         showcase.create_in_hdx()
                         showcase.add_dataset(dataset)
-                        topline_indicators.extend(dataset_topline_indicators.values())
                         country_isos.append(countryiso)
+                topline_indicators.extend(topline_indicators_dict.values())
 
         dataset = generate_topline_dataset(folder, topline_indicators, country_isos)
         logger.info('Adding topline indicators')
@@ -62,4 +61,4 @@ def main():
 
 
 if __name__ == '__main__':
-    facade(main, hdx_key='a4b67b0e-5a89-469c-b29b-4c9b51ab9311', user_agent_config_yaml=join(expanduser('~'), '.useragents.yml'), user_agent_lookup=lookup, project_config_yaml=join('config', 'project_configuration.yml'))
+    facade(main, user_agent_config_yaml=join(expanduser('~'), '.useragents.yml'), user_agent_lookup=lookup, project_config_yaml=join('config', 'project_configuration.yml'))
