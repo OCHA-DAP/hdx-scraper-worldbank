@@ -24,16 +24,11 @@ from hdx.utilities.dictandlist import write_list_to_csv, dict_of_lists_add
 from slugify import slugify
 
 logger = logging.getLogger(__name__)
-indicator_limit = 60
-character_limit = 1500
-tag_mappings = {'financial sector': 'economics', 'social protection': 'socioeconomics', 'private sector': 'economics',
-                'public sector': 'economics', 'science': 'economics',
-                'millenium development goals': 'millennium development goals - mdg', 'external debt': 'economics'}
 quickchart_resourceno = 0
 
 
 def get_topics(base_url, downloader):
-    url = '%sv2/en/sources?format=json&per_page=10000' % base_url
+    url = '%sv2/en/source?format=json&per_page=10000' % base_url
     response = downloader.download(url)
     json = response.json()
     valid_sources = list()
@@ -102,9 +97,8 @@ def get_unit(indicator_name):
 
 
 def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname, topic,
-                                  topline_indicator_codes, topline_indicators):
-    """
-    """
+                                  indicator_limit, character_limit, tag_mappings, topline_indicator_codes,
+                                  topline_indicators):
     topicname = topic['value'].replace('&', 'and')
     title = '%s - %s' % (countryname, topicname)
     slugified_name = slugify('World Bank %s Indicators for %s' % (topicname, countryname)).lower()
@@ -217,25 +211,17 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
 
     for len_indicator_code in sorted(indicators_len_dict):
         indicators_dict = indicators_len_dict[len_indicator_code]
-        indicator_values_len = dict()
         for indicator_code in indicators_dict:
             ind_year_values = indicators_dict[indicator_code]
             if len(set(ind_year_values.values())) == 1:
                 continue
-            len_ind_year_values = len(ind_year_values)
-            indicator_codes = indicator_values_len.get(len_ind_year_values, list())
-            indicator_codes.append(indicator_code)
-            indicator_values_len[len_ind_year_values] = indicator_codes
-        for len_ind_year_values in sorted(indicator_values_len, reverse=True):
-            indicator_codes = indicator_values_len[len_ind_year_values]
-            for indicator_code in indicator_codes:
-                indicator_name = indicator_names_dict[indicator_code]
-                if qc_indicators[0] is None:
-                    qc_indicators[0] = {'code': indicator_code, 'name': indicator_name}
-                elif qc_indicators[1] is None:
-                    qc_indicators[1] = {'code': indicator_code, 'name': indicator_name}
-                elif qc_indicators[2] is None:
-                    qc_indicators[2] = {'code': indicator_code, 'name': indicator_name}
+            indicator_name = indicator_names_dict[indicator_code]
+            if qc_indicators[0] is None:
+                qc_indicators[0] = {'code': indicator_code, 'name': indicator_name}
+            elif qc_indicators[1] is None:
+                qc_indicators[1] = {'code': indicator_code, 'name': indicator_name}
+            elif qc_indicators[2] is None:
+                qc_indicators[2] = {'code': indicator_code, 'name': indicator_name}
 
     headers = ['Country Name', 'Country ISO3', 'Year', 'Indicator Name', 'Indicator Code', 'Value']
     hxlrow = {'Country Name': '#country+name', 'Country ISO3': '#country+code', 'Year': '#date+year',

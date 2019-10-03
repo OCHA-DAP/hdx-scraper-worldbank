@@ -27,17 +27,22 @@ def main():
     base_url = Configuration.read()['base_url']
     with temp_dir('worldbank') as folder:
         with Download(status_forcelist=[400, 429, 500, 502, 503, 504]) as downloader:
+            indicator_limit = Configuration.read()['indicator_limit']
+            character_limit = Configuration.read()['character_limit']
+            tag_mappings = Configuration.read()['tag_mappings']
             topline_indicator_names = Configuration.read()['topline_indicators']
             country_isos = list()
             topline_indicators = list()
+            topics = get_topics(base_url, downloader)
             for countryiso, countryiso2, countryname in get_countries(base_url, downloader):
                 if countryiso != 'AFG' and countryiso != 'SYR':  # Remove!
                     continue
                 topline_indicators_dict = dict()
-                for topic in get_topics(base_url, downloader):
+                for topic in topics:
                     dataset, showcase, qc_indicators = \
                         generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname,
-                                                      topic, topline_indicator_names, topline_indicators_dict)
+                                                      topic, indicator_limit, character_limit, tag_mappings,
+                                                      topline_indicator_names, topline_indicators_dict)
                     if dataset is not None:
                         logger.info('Adding %s' % countryname)
                         dataset.update_from_yaml()
