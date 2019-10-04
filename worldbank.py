@@ -75,30 +75,44 @@ def get_countries(base_url, downloader):
 
 
 def get_unit(indicator_name):
-    unit_regexp = re.search(r'\((.*?)\)', indicator_name)
-    if unit_regexp:
-        return unit_regexp.group(1)
+    if indicator_name[:9] == 'Coverage:':
+        return 'Coverage Rate'
     word_regexp = re.findall(r'\w+', indicator_name)
+    found_per = False
     if word_regexp:
-        found_per = False
         for word in word_regexp:
             if word == 'per':
                 found_per = True
-        if found_per:
-            return indicator_name
+    unit_regexp = re.findall(r'\((.*?)\)', indicator_name)
+    if unit_regexp:
+        result = (' '.join(unit_regexp)).strip()
+        findrangeonly = re.search(r'^[0-9]+-[0-9]+$', result)
+        if findrangeonly is None:
+            findvalonly = re.search(r'^[0-9]+$', result)
+            if findvalonly is None:
+                if not (found_per and 'per' not in result):
+                    finddollarval = re.search(r'\$[0-9]+', result)
+                    if finddollarval is None:
+                        return result
+    if found_per:
+        if indicator_name[:9] == 'Number of':
+            return indicator_name[10:].strip()
+        return indicator_name.strip()
+    if 'percentage' in indicator_name.lower():
+        return '%'
     if 'population' in indicator_name.lower():
         return 'people'
     if indicator_name[:9] == 'Number of':
-        return indicator_name[10:]
+        return indicator_name[10:].strip()
     if ',' in indicator_name:
         return indicator_name[indicator_name.find(',')+1:].strip()
     logger.warning('Using full indicator name as unit: %s' % indicator_name)
-    return indicator_name
+    return indicator_name.strip()
 
 
 def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname, topic,
                                   indicator_limit, character_limit, tag_mappings, topline_indicator_codes,
-                                  topline_indicators):
+                                  topline_indicators, ind_subtract=5):
     topicname = topic['value'].replace('&', 'and')
     title = '%s - %s' % (countryname, topicname)
     slugified_name = slugify('World Bank %s Indicators for %s' % (topicname, countryname)).lower()
@@ -121,6 +135,7 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
         if tag in tag_mappings:
             tags[i] = tag_mappings[tag]
     tags.append('hxl')
+    tags.append('indicators')
     dataset.add_tags(tags)
 
     earliest_year = 10000
@@ -169,7 +184,7 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
                         'source': 'World Bank',
                         'url': url,
                         'year': year,
-                        'unit': get_unit(indicator_name),
+                        'unit': unit,
                         'value': value
                     }
                     topline_indicators[indicator_code] = topline_indicator
@@ -183,8 +198,8 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
             ie = min(i + indicator_limit, indicator_list_len)
             indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie]])
             if len(indicators_string) > character_limit:
-                indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie-5]])
-                i -= 5
+                indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie-ind_subtract]])
+                i -= ind_subtract
             url = '%s%s?source=%s&format=json&per_page=10000' % (start_url, indicators_string, source_id)
             response = downloader.download(url)
             json = response.json()
