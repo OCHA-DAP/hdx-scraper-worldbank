@@ -198,8 +198,9 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
             ie = min(i + indicator_limit, indicator_list_len)
             indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie]])
             if len(indicators_string) > character_limit:
-                indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie-ind_subtract]])
-                i -= ind_subtract
+                ie -= ind_subtract
+                indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie]])
+                i = ie - indicator_limit
             url = '%s%s?source=%s&format=json&per_page=10000' % (start_url, indicators_string, source_id)
             response = downloader.download(url)
             json = response.json()
