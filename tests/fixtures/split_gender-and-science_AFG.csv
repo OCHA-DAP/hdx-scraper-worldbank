@@ -1,0 +1,6 @@
+Country Name,Country ISO3,Year,Indicator Name,Indicator Code,Value
+#country+name,#country+code,#date+year,#indicator+name,#indicator+code,#indicator+value+num
+Afghanistan,AFG,2016,"Maternal mortality ratio (modeled estimate, per 100,000 live births)",SH.STA.MMRT,673
+Afghanistan,AFG,2016,Law prohibits or invalidates child or early marriage (1=yes; 0=no),SG.LAW.CHMR,1
+Afghanistan,AFG,2016,"Adolescent fertility rate (births per 1,000 women ages 15-19)",SP.ADO.TFRT,75.325
+Afghanistan,AFG,2016,Lifetime risk of maternal death (1 in:  rate varies by country),SH.MMR.RISK,30

@@ -11,9 +11,10 @@ from hdx.hdx_configuration import Configuration
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import temp_dir
 
-from worldbank import generate_dataset_and_showcase, get_countries, get_indicators_and_tags, generate_topline_dataset
+from worldbank import get_countries, get_topics, generate_dataset_and_showcase, generate_topline_dataset, \
+    generate_resource_view
 
-from hdx.facades.hdx_scraperwiki import facade
+from hdx.facades.simple import facade
 
 logger = logging.getLogger(__name__)
 
@@ -26,35 +27,33 @@ def main():
     base_url = Configuration.read()['base_url']
     with temp_dir('worldbank') as folder:
         with Download(status_forcelist=[400, 429, 500, 502, 503, 504]) as downloader:
-            indicators, tags = get_indicators_and_tags(base_url, downloader, Configuration.read()['indicator_list'])
+            indicator_limit = Configuration.read()['indicator_limit']
+            character_limit = Configuration.read()['character_limit']
+            tag_mappings = Configuration.read()['tag_mappings']
             topline_indicator_names = Configuration.read()['topline_indicators']
-
             country_isos = list()
             topline_indicators = list()
+            topics = get_topics(base_url, downloader)
             for countryiso, countryiso2, countryname in get_countries(base_url, downloader):
-                dataset, showcase, country_topline_indicators = \
-                    generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname,
-                                                  indicators, topline_indicator_names)
-                if dataset is not None:
-                    logger.info('Adding %s' % countryname)
-                    dataset.add_tags(tags)
-                    dataset.clean_dataset_tags()
-                    dataset.update_from_yaml()
-                    dataset.create_in_hdx(remove_additional_resources=True)
-                    resources = dataset.get_resources()
-                    if resources[0].get_file_type() != 'CSV':
-                        resource_ids = list()
-                        for resource in resources:
-                            resource_id = resource['id']
-                            if resource.get_file_type() == 'CSV':
-                                resource_ids.insert(0, resource_id)
-                            else:
-                                resource_ids.append(resource_id)
-                        dataset.reorder_resources(resource_ids)
-                    showcase.create_in_hdx()
-                    showcase.add_dataset(dataset)
-                    topline_indicators.extend(country_topline_indicators)
-                    country_isos.append(countryiso)
+                if countryiso != 'AFG' and countryiso != 'SYR':  # Remove!
+                    continue
+                topline_indicators_dict = dict()
+                for topic in topics:
+                    dataset, showcase, qc_indicators = \
+                        generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname,
+                                                      topic, indicator_limit, character_limit, tag_mappings,
+                                                      topline_indicator_names, topline_indicators_dict)
+                    if dataset is not None:
+                        logger.info('Adding %s' % countryname)
+                        dataset.update_from_yaml()
+                        dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
+                        resource_view = generate_resource_view(dataset, qc_indicators)
+                        if resource_view:
+                            resource_view.create_in_hdx()
+                        showcase.create_in_hdx()
+                        showcase.add_dataset(dataset)
+                        country_isos.append(countryiso)
+                topline_indicators.extend(topline_indicators_dict.values())
 
         dataset = generate_topline_dataset(folder, topline_indicators, country_isos)
         logger.info('Adding topline indicators')
