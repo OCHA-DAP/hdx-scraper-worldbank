@@ -35,8 +35,6 @@ def main():
             topline_indicators = list()
             topics = get_topics(base_url, downloader)
             for countryiso, countryiso2, countryname in get_countries(base_url, downloader):
-                if countryiso != 'AFG' and countryiso != 'SYR':  # Remove!
-                    continue
                 topline_indicators_dict = dict()
                 for topic in topics:
                     dataset, showcase, qc_indicators = \
