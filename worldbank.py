@@ -322,8 +322,8 @@ def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topi
     notes = ["Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the ",
              "following topics which also exist as individual datasets on HDX: %s." % ', '.join(topiclist)]
     dataset['notes'] = ''.join(notes)
-    earliest_year = sorted(list(earliest_years))[0]
-    latest_year = sorted(list(latest_years))[-1]
+    earliest_year = sorted(earliest_years)[0]
+    latest_year = sorted(latest_years)[-1]
     dataset.set_dataset_year_range(earliest_year, latest_year)
     cutdownrows = list()
     for row in rows:
@@ -478,7 +478,6 @@ def generate_all_datasets_showcases(configuration, downloader, folder, country, 
             country_isos.append(country['iso3'])
             create_dataset_showcase(dataset, showcase, qc_indicators)
     topline_indicators.extend(topline_indicator_dict.values())
-    alltags = sorted(list(alltags))
-    return generate_combined_dataset_and_showcase(site_url, folder, country, alltags, topics, ignore_topics,
+    return generate_combined_dataset_and_showcase(site_url, folder, country, sorted(alltags), topics, ignore_topics,
                                                   earliest_years, latest_years, allrows)
 
