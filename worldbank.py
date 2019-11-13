@@ -142,7 +142,7 @@ def generate_dataset_and_showcase(site_url, configuration, downloader, folder, c
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
-        return None, None, None, None, None, None
+        return None, None, None, None, None, topic
     dataset.set_expected_update_frequency('Every year')
 
     tag_mappings = configuration['tag_mappings']
@@ -233,7 +233,7 @@ def generate_dataset_and_showcase(site_url, configuration, downloader, folder, c
 
     if earliest_year == 10000:
         logger.error('%s has no data!' % title)
-        return None, None, None, None, None, None
+        return None, None, None, None, None, topicname
 
     indicator_names = set()
     for indicator_name_long in indicator_names_dict.values():
@@ -290,7 +290,8 @@ def generate_dataset_and_showcase(site_url, configuration, downloader, folder, c
     return dataset, showcase, qc_indicators, earliest_year, latest_year, rows
 
 
-def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topics, earliest_years, latest_years, rows):
+def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topics, ignore_topics, earliest_years,
+                                           latest_years, rows):
     indicators = 'Economic, Social, Environmental, Health, Education, Development and Energy'
     countryname = country['name']
     title = '%s - %s' % (countryname, indicators)
@@ -308,12 +309,14 @@ def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topi
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
-        return None, None, None
+        return None, None
     dataset.set_expected_update_frequency('Every year')
     dataset.add_tags(tags)
     topiclist = list()
     for topic in topics:
         topicname = topic['value']
+        if topicname in ignore_topics:
+            continue
         topic_dataset_name = get_topic_dataset_name(topicname, countryname)
         topiclist.append('[%s](%s/dataset/%s)' % (topicname, site_url, topic_dataset_name))
     notes = ["Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the ",
@@ -459,10 +462,14 @@ def generate_all_datasets_showcases(configuration, downloader, folder, country, 
     earliest_years = set()
     latest_years = set()
     topline_indicator_dict = dict()
+    ignore_topics = list()
     for topic in topics:
         dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
             generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic, topline_indicator_dict)
-        if dataset is not None:
+        if dataset is None:
+            if rows is not None:
+                ignore_topics.append(rows)
+        else:
             logger.info('Adding %s %s' % (country['name'], topic['value']))
             allrows.extend(rows[1:])
             alltags.update(dataset.get_tags())
@@ -472,6 +479,6 @@ def generate_all_datasets_showcases(configuration, downloader, folder, country, 
             create_dataset_showcase(dataset, showcase, qc_indicators)
     topline_indicators.extend(topline_indicator_dict.values())
     alltags = sorted(list(alltags))
-    return generate_combined_dataset_and_showcase(site_url, folder, country, alltags, topics, earliest_years,
-                                                  latest_years, allrows)
+    return generate_combined_dataset_and_showcase(site_url, folder, country, alltags, topics, ignore_topics,
+                                                  earliest_years, latest_years, allrows)
 
