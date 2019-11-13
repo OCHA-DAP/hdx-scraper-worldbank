@@ -25,6 +25,10 @@ from slugify import slugify
 
 logger = logging.getLogger(__name__)
 quickchart_resourceno = 0
+headers = ['Country Name', 'Country ISO3', 'Year', 'Indicator Name', 'Indicator Code', 'Value']
+hxlrow = {'Country Name': '#country+name', 'Country ISO3': '#country+code', 'Year': '#date+year',
+          'Indicator Name': '#indicator+name', 'Indicator Code': '#indicator+code', 'Value': '#indicator+value+num'}
+resource_name = '%s Indicators for %s'
 
 
 def get_topics(base_url, downloader):
@@ -44,7 +48,8 @@ def get_topics(base_url, downloader):
     topics = json[1]
     for topic in topics:
         tags = list()
-        tag_name = topic['value'].lower()
+        value = topic['value']
+        tag_name = value.lower()
         if '&' in tag_name:
             tag_names = tag_name.split(' & ')
             for tag_name in tag_names:
@@ -62,6 +67,7 @@ def get_topics(base_url, downloader):
                 continue
             dict_of_lists_add(sources, indicator['source']['id'], indicator)
         topic['sources'] = sources
+        topic['value'] = value.replace('&', 'and')
     return topics
 
 
@@ -71,7 +77,7 @@ def get_countries(base_url, downloader):
     json = response.json()
     for country in json[1]:
         if country['region']['value'] != 'Aggregates':
-            yield country['id'], country['iso2Code'], country['name']
+            yield {'name': country['name'], 'iso3': country['id'], 'iso2': country['iso2Code']}
 
 
 def get_unit(indicator_name):
@@ -110,12 +116,19 @@ def get_unit(indicator_name):
     return indicator_name.strip()
 
 
-def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname, topic,
-                                  indicator_limit, character_limit, tag_mappings, topline_indicator_codes,
-                                  topline_indicators, ind_subtract=5):
-    topicname = topic['value'].replace('&', 'and')
+def get_topic_dataset_name(topicname, countryname):
+    return slugify('World Bank %s Indicators for %s' % (topicname, countryname)).lower()
+
+
+def get_combined_dataset_name(countryname):
+    return slugify('World Bank Combined Indicators for %s' % countryname).lower()
+
+
+def generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic, topline_indicators):
+    countryname = country['name']
+    topicname = topic['value']
     title = '%s - %s' % (countryname, topicname)
-    slugified_name = slugify('World Bank %s Indicators for %s' % (topicname, countryname)).lower()
+    slugified_name = get_topic_dataset_name(topicname, countryname)
 
     dataset = Dataset({
         'name': slugified_name,
@@ -124,12 +137,15 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
     dataset.set_maintainer('196196be-6037-4488-8b71-d786adf4c081')
     dataset.set_organization('hdx')
     dataset.set_subnational(False)
+    countryiso = country['iso3']
     try:
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
-        return None, None, None
+        return None, None, None, None, None, None
     dataset.set_expected_update_frequency('Every year')
+
+    tag_mappings = configuration['tag_mappings']
     tags = topic['tags']
     for i, tag in enumerate(tags):
         if tag in tag_mappings:
@@ -169,7 +185,7 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
             indicator_dict[year] = value
             indicators_dict[indicator_code] = indicator_dict
             indicators_len_dict[len_indicator_code] = indicators_dict
-            if indicator_code in topline_indicator_codes:
+            if indicator_code in configuration['topline_indicators']:
                 topline_indicator = topline_indicators.get(indicator_code)
                 if topline_indicator is None:
                     topline_year = 0
@@ -189,6 +205,9 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
                     }
                     topline_indicators[indicator_code] = topline_indicator
 
+    base_url = configuration['base_url']
+    indicator_limit = configuration['indicator_limit']
+    character_limit = configuration['character_limit']
     start_url = '%sv2/en/country/%s/indicator/' % (base_url, countryiso)
     for source_id in topic['sources']:
         indicator_list = topic['sources'][source_id]
@@ -198,7 +217,7 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
             ie = min(i + indicator_limit, indicator_list_len)
             indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie]])
             if len(indicators_string) > character_limit:
-                ie -= ind_subtract
+                ie -= configuration['indicator_subtract']
                 indicators_string = ';'.join([x['id'] for x in indicator_list[i:ie]])
                 i = ie - indicator_limit
             url = '%s%s?source=%s&format=json&per_page=10000' % (start_url, indicators_string, source_id)
@@ -214,7 +233,7 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
 
     if earliest_year == 10000:
         logger.exception('%s has no data!' % countryname)
-        return None, None, None
+        return None, None, None, None, None, None
 
     indicator_names = set()
     for indicator_name_long in indicator_names_dict.values():
@@ -223,7 +242,11 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
         ind2, _, _ = ind1.partition('(')
         indicator_name, _, _ = ind2.partition(':')
         indicator_names.add((indicator_name.strip()))
-    dataset['notes'] = "%s\n\nContains data from the World Bank's [data portal](http://data.worldbank.org/).\n\nIndicators: %s" % (topic['sourceNote'], ', '.join(sorted(indicator_names)))
+    comb_dsname = get_combined_dataset_name(countryname)
+    notes = ["Contains data from the World Bank's [data portal](http://data.worldbank.org/). ",
+             'There is also a [consolidated country dataset](%s/dataset/%s) on HDX.\n\n' % (site_url, comb_dsname),
+             topic['sourceNote'], '\n\nIndicators: %s' % ', '.join(sorted(indicator_names))]
+    dataset['notes'] = ''.join(notes)
 
     for len_indicator_code in sorted(indicators_len_dict):
         indicators_dict = indicators_len_dict[len_indicator_code]
@@ -239,18 +262,14 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
             elif qc_indicators[2] is None:
                 qc_indicators[2] = {'code': indicator_code, 'name': indicator_name}
 
-    headers = ['Country Name', 'Country ISO3', 'Year', 'Indicator Name', 'Indicator Code', 'Value']
-    hxlrow = {'Country Name': '#country+name', 'Country ISO3': '#country+code', 'Year': '#date+year',
-              'Indicator Name': '#indicator+name', 'Indicator Code': '#indicator+code', 'Value': '#indicator+value+num'}
-
     rows.insert(0, hxlrow)
     slug_topicname = slugify(topicname)
     filepath = join(folder, '%s_%s.csv' % (slug_topicname, countryiso))
     write_list_to_csv(rows, filepath, headers=headers)
 
     resource_data = {
-        'name': topicname,
-        'description': 'HXLated csv containing all the %s indicators' % topicname,
+        'name': resource_name % (topicname, countryname),
+        'description': 'HXLated csv containing %s indicators' % topicname,
     }
     resource = Resource(resource_data)
     resource.set_file_type('csv')
@@ -260,16 +279,87 @@ def generate_dataset_and_showcase(base_url, downloader, folder, countryiso, coun
     dataset.set_dataset_year_range(earliest_year, latest_year)
     dataset.set_quickchart_resource(quickchart_resourceno)
 
-    iso2upper = countryiso2.upper()
     showcase = Showcase({
         'name': '%s-showcase' % slugified_name,
         'title': '%s indicators for %s' % (topicname, countryname),
         'notes': '%s indicators for %s' % (topicname, countryname),
-        'url': 'https://data.worldbank.org/topic/%s?locations=%s' % (slug_topicname, iso2upper),
+        'url': 'https://data.worldbank.org/topic/%s?locations=%s' % (slug_topicname, country['iso2'].upper()),
         'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg'
     })
     showcase.add_tags(tags)
-    return dataset, showcase, qc_indicators
+    return dataset, showcase, qc_indicators, earliest_year, latest_year, rows
+
+
+def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topics, earliest_years, latest_years, rows):
+    indicators = 'Economic, Social, Environmental, Health, Education, Development and Energy'
+    countryname = country['name']
+    title = '%s - %s' % (countryname, indicators)
+    slugified_name = get_combined_dataset_name(countryname)
+
+    dataset = Dataset({
+        'name': slugified_name,
+        'title': title,
+    })
+    dataset.set_maintainer('196196be-6037-4488-8b71-d786adf4c081')
+    dataset.set_organization('hdx')
+    dataset.set_subnational(False)
+    countryiso = country['iso3']
+    try:
+        dataset.add_country_location(countryiso)
+    except HDXError as e:
+        logger.exception('%s has a problem! %s' % (countryname, e))
+        return None, None, None
+    dataset.set_expected_update_frequency('Every year')
+    dataset.add_tags(tags)
+    topiclist = list()
+    for topic in topics:
+        topicname = topic['value']
+        topic_dataset_name = get_topic_dataset_name(topicname, countryname)
+        topiclist.append('[%s](%s/dataset/%s)' % (topicname, site_url, topic_dataset_name))
+    notes = ["Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the ",
+             "following topics which also exist as individual datasets on HDX: %s." % ', '.join(topiclist)]
+    dataset['notes'] = ''.join(notes)
+    earliest_year = sorted(list(earliest_years))[0]
+    latest_year = sorted(list(latest_years))[-1]
+    dataset.set_dataset_year_range(earliest_year, latest_year)
+    cutdownrows = list()
+    for row in rows:
+        if row['Indicator Code'] in ['SP.POP.TOTL', 'SP.DYN.LE00.IN', 'SE.PRM.ENRR']:
+            cutdownrows.append(row)
+    rows.insert(0, hxlrow)
+    cutdownrows.insert(0, hxlrow)
+    filepath = join(folder, 'indicators_%s.csv' % countryiso)
+    write_list_to_csv(rows, filepath, headers=headers)
+    resource_data = {
+        'name': resource_name % ('Combined', countryname),
+        'description': 'HXLated csv containing %s indicators' % indicators,
+    }
+    resource = Resource(resource_data)
+    resource.set_file_type('csv')
+    resource.set_file_to_upload(filepath)
+    dataset.add_update_resource(resource)
+
+    filepath = join(folder, 'qc_indicators_%s.csv' % countryiso)
+    write_list_to_csv(cutdownrows, filepath, headers=headers)
+    resource_data = {
+        'name': 'QuickCharts %s' % resource_name % ('Combined', countryname),
+        'description': 'QuickCharts resource',
+    }
+    resource = Resource(resource_data)
+    resource.set_file_type('csv')
+    resource.set_file_to_upload(filepath)
+    dataset.add_update_resource(resource)
+
+    showcase = Showcase({
+        'name': '%s-showcase' % slugified_name,
+        'title': 'Indicators for %s' % countryname,
+        'notes': '%s indicators for %s' % (indicators, countryname),
+        'url': 'https://data.worldbank.org/?locations=%s' % country['iso2'].upper(),
+        'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg'
+    })
+    showcase.add_tags(tags)
+
+    return dataset, showcase
 
 
 def generate_topline_dataset(folder, topline_indicators, country_isos):
@@ -334,15 +424,15 @@ def generate_resource_view(dataset, indicators):
     resourceview.update_from_yaml()
     hxl_preview_config = resourceview['hxl_preview_config']
     if indicators[0] is not None:
-        hxl_preview_config = hxl_preview_config.replace('AG.AGR.TRAC.NO', indicators[0]['code'])
+        hxl_preview_config = hxl_preview_config.replace('SP.POP.TOTL', indicators[0]['code'])
         hxl_preview_config = hxl_preview_config.replace('Chart 1', indicators[0]['name'])
         hxl_preview_config = hxl_preview_config.replace('Value 1', get_unit(indicators[0]['name']))
         if indicators[1] is not None:
-            hxl_preview_config = hxl_preview_config.replace('AG.CON.FERT.PT.ZS', indicators[1]['code'])
+            hxl_preview_config = hxl_preview_config.replace('SP.DYN.LE00.IN', indicators[1]['code'])
             hxl_preview_config = hxl_preview_config.replace('Chart 2', indicators[1]['name'])
             hxl_preview_config = hxl_preview_config.replace('Value 2', get_unit(indicators[1]['name']))
             if indicators[2] is not None:
-                hxl_preview_config = hxl_preview_config.replace('AG.CON.FERT.ZS', indicators[2]['code'])
+                hxl_preview_config = hxl_preview_config.replace('SE.PRM.ENRR', indicators[2]['code'])
                 hxl_preview_config = hxl_preview_config.replace('Chart 3', indicators[2]['name'])
                 hxl_preview_config = hxl_preview_config.replace('Value 3', get_unit(indicators[2]['name']))
             else:
@@ -358,4 +448,30 @@ def generate_resource_view(dataset, indicators):
     else:
         resourceview = None
     return resourceview
+
+
+def generate_all_datasets_showcases(configuration, downloader, folder, country, topics, country_isos,
+                                    topline_indicators, create_dataset_showcase):
+    site_url = configuration.get_hdx_site_url()
+
+    allrows = list()
+    alltags = set()
+    earliest_years = set()
+    latest_years = set()
+    topline_indicator_dict = dict()
+    for topic in topics:
+        dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
+            generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic, topline_indicator_dict)
+        if dataset is not None:
+            logger.info('Adding %s %s' % (country['name'], topic['value']))
+            allrows.extend(rows[1:])
+            alltags.update(dataset.get_tags())
+            earliest_years.add(earliest_year)
+            latest_years.add(latest_year)
+            country_isos.append(country['iso3'])
+            create_dataset_showcase(dataset, showcase, qc_indicators)
+    topline_indicators.extend(topline_indicator_dict.values())
+    alltags = sorted(list(alltags))
+    return generate_combined_dataset_and_showcase(site_url, folder, country, alltags, topics, earliest_years,
+                                                  latest_years, allrows)
 

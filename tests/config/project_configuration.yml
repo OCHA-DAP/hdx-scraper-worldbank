@@ -2,6 +2,7 @@
 base_url: "http://papa/"
 indicator_limit: 60
 character_limit: 1500
+indicator_subtract: 5
 tag_mappings:
   financial sector: "economics"
   social protection: "socioeconomics"
