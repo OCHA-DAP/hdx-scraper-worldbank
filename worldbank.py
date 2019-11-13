@@ -232,7 +232,7 @@ def generate_dataset_and_showcase(site_url, configuration, downloader, folder, c
             i += indicator_limit
 
     if earliest_year == 10000:
-        logger.exception('%s has no data!' % countryname)
+        logger.error('%s has no data!' % title)
         return None, None, None, None, None, None
 
     indicator_names = set()
@@ -425,16 +425,16 @@ def generate_resource_view(dataset, indicators):
     hxl_preview_config = resourceview['hxl_preview_config']
     if indicators[0] is not None:
         hxl_preview_config = hxl_preview_config.replace('SP.POP.TOTL', indicators[0]['code'])
-        hxl_preview_config = hxl_preview_config.replace('Chart 1', indicators[0]['name'])
-        hxl_preview_config = hxl_preview_config.replace('Value 1', get_unit(indicators[0]['name']))
+        hxl_preview_config = hxl_preview_config.replace('Total Population', indicators[0]['name'])
+        hxl_preview_config = hxl_preview_config.replace('People', get_unit(indicators[0]['name']))
         if indicators[1] is not None:
             hxl_preview_config = hxl_preview_config.replace('SP.DYN.LE00.IN', indicators[1]['code'])
-            hxl_preview_config = hxl_preview_config.replace('Chart 2', indicators[1]['name'])
-            hxl_preview_config = hxl_preview_config.replace('Value 2', get_unit(indicators[1]['name']))
+            hxl_preview_config = hxl_preview_config.replace('Life Expectancy at Birth', indicators[1]['name'])
+            hxl_preview_config = hxl_preview_config.replace('Years', get_unit(indicators[1]['name']))
             if indicators[2] is not None:
                 hxl_preview_config = hxl_preview_config.replace('SE.PRM.ENRR', indicators[2]['code'])
-                hxl_preview_config = hxl_preview_config.replace('Chart 3', indicators[2]['name'])
-                hxl_preview_config = hxl_preview_config.replace('Value 3', get_unit(indicators[2]['name']))
+                hxl_preview_config = hxl_preview_config.replace('Primary School Enrollment', indicators[2]['name'])
+                hxl_preview_config = hxl_preview_config.replace('Gross Percentage', get_unit(indicators[2]['name']))
             else:
                 hxl_preview_config = json.loads(hxl_preview_config)
                 del hxl_preview_config['bites'][2]
