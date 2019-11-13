@@ -58,7 +58,7 @@ class TestWorldBank:
                         {'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
-               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/). There is also a [consolidated country dataset](https://feature-data.humdata.org/dataset/world-bank-combined-indicators-for-afghanistan) on HDX.\n\nGender equality is a core development objective...\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio",
+               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/). There is also a [consolidated country dataset](https://test-data.humdata.org/dataset/world-bank-combined-indicators-for-afghanistan) on HDX.\n\nGender equality is a core development objective...\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio",
                'dataset_date': '01/01/2016-12/31/2017', 'dataset_preview': 'resource_id'}
     resource = {'name': 'Gender and Science Indicators for Afghanistan', 'description': 'HXLated csv containing Gender and Science indicators',
                 'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload', 'dataset_preview_enabled': 'True'}
@@ -73,7 +73,7 @@ class TestWorldBank:
 
     @pytest.fixture(scope='function')
     def configuration(self):
-        Configuration._create(hdx_read_only=True, user_agent='test',
+        Configuration._create(hdx_read_only=True, hdx_site='test', user_agent='test',
                               project_config_yaml=join('tests', 'config', 'project_configuration.yml'))
         Locations.set_validlocations([{'name': 'afg', 'title': 'Afghanistan'}])
         Country.countriesdata(False)
@@ -218,7 +218,7 @@ class TestWorldBank:
         dataset = Dataset(TestWorldBank.dataset)
         resource = copy.deepcopy(TestWorldBank.resource)
         resource['id'] = '123'
-        resource['url'] = 'https://feature-data.humdata.org/dataset/b135da4b-5623-431a-93ff-936df331c762/resource/1ef32898-529e-4976-b7bb-6f04438e9bea/download/gender_afg.csv'
+        resource['url'] = 'https://test-data.humdata.org/dataset/b135da4b-5623-431a-93ff-936df331c762/resource/1ef32898-529e-4976-b7bb-6f04438e9bea/download/gender_afg.csv'
         dataset.add_update_resource(resource)
         qc_indicators = copy.deepcopy(TestWorldBank.qc_indicators)
         result = generate_resource_view(dataset, qc_indicators)
@@ -248,7 +248,7 @@ class TestWorldBank:
             assert dataset == {'name': 'world-bank-combined-indicators-for-afghanistan', 'title': 'Afghanistan - Economic, Social, Environmental, Health, Education, Development and Energy',
                                'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '365',
                                'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
-                               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the following topics which also exist as individual datasets on HDX: [Gender and Science](https://feature-data.humdata.org/dataset/world-bank-gender-and-science-indicators-for-afghanistan).", 'dataset_date': '01/01/2016-12/31/2017'}
+                               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the following topics which also exist as individual datasets on HDX: [Gender and Science](https://test-data.humdata.org/dataset/world-bank-gender-and-science-indicators-for-afghanistan).", 'dataset_date': '01/01/2016-12/31/2017'}
             resources = dataset.get_resources()
             assert resources == [{'name': 'Combined Indicators for Afghanistan', 'description': 'HXLated csv containing Economic, Social, Environmental, Health, Education, Development and Energy indicators',
                                   'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'},
