@@ -241,6 +241,10 @@ class TestWorldBank:
                                   'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'},
                                  {'name': 'QuickCharts Combined Indicators for Afghanistan', 'description': 'QuickCharts resource',
                                   'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'}]
+            filename = 'indicators_%s.csv' % TestWorldBank.country['iso3']
+            expected_file = join('tests', 'fixtures', filename)
+            actual_file = join(folder, filename)
+            assert_files_same(expected_file, actual_file)
             assert showcase == {'name': 'world-bank-combined-indicators-for-afghanistan-showcase', 'title': 'Indicators for Afghanistan',
                                 'notes': 'Economic, Social, Environmental, Health, Education, Development and Energy indicators for Afghanistan',
                                 'url': 'https://data.worldbank.org/?locations=AF', 'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg',
