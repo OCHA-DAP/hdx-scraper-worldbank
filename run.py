@@ -11,8 +11,8 @@ from hdx.hdx_configuration import Configuration
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import temp_dir
 
-from worldbank import get_countries, get_topics, generate_dataset_and_showcase, generate_topline_dataset, \
-    generate_resource_view
+from worldbank import get_countries, get_topics, generate_all_datasets_showcases
+from worldbank import generate_topline_dataset, generate_resource_view
 
 from hdx.facades.simple import facade
 
@@ -21,37 +21,35 @@ logger = logging.getLogger(__name__)
 lookup = 'hdx-scraper-worldbank'
 
 
+def create_dataset_showcase(dataset, showcase, qc_indicators):
+    dataset.update_from_yaml()
+    dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
+    resource_view = generate_resource_view(dataset, qc_indicators)
+    if resource_view:
+        resource_view.create_in_hdx()
+    showcase.create_in_hdx()
+    showcase.add_dataset(dataset)
+
+
 def main():
     """Generate dataset and create it in HDX"""
 
-    base_url = Configuration.read()['base_url']
     with temp_dir('worldbank') as folder:
         with Download(status_forcelist=[400, 429, 500, 502, 503, 504]) as downloader:
-            indicator_limit = Configuration.read()['indicator_limit']
-            character_limit = Configuration.read()['character_limit']
-            tag_mappings = Configuration.read()['tag_mappings']
-            topline_indicator_names = Configuration.read()['topline_indicators']
+            configuration = Configuration.read()
+            base_url = configuration['base_url']
+
             country_isos = list()
             topline_indicators = list()
             topics = get_topics(base_url, downloader)
-            for countryiso, countryiso2, countryname in get_countries(base_url, downloader):
-                topline_indicators_dict = dict()
-                for topic in topics:
-                    dataset, showcase, qc_indicators = \
-                        generate_dataset_and_showcase(base_url, downloader, folder, countryiso, countryiso2, countryname,
-                                                      topic, indicator_limit, character_limit, tag_mappings,
-                                                      topline_indicator_names, topline_indicators_dict)
-                    if dataset is not None:
-                        logger.info('Adding %s' % countryname)
-                        dataset.update_from_yaml()
-                        dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
-                        resource_view = generate_resource_view(dataset, qc_indicators)
-                        if resource_view:
-                            resource_view.create_in_hdx()
-                        showcase.create_in_hdx()
-                        showcase.add_dataset(dataset)
-                        country_isos.append(countryiso)
-                topline_indicators.extend(topline_indicators_dict.values())
+            for country in get_countries(base_url, downloader):
+                dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, country, topics,
+                                                                    country_isos, topline_indicators, create_dataset_showcase)
+                dataset.update_from_yaml()
+                dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
+                dataset.generate_resource_view(1)
+                showcase.create_in_hdx()
+                showcase.add_dataset(dataset)
 
         dataset = generate_topline_dataset(folder, topline_indicators, country_isos)
         logger.info('Adding topline indicators')
