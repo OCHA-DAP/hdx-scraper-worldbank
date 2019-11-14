@@ -45,11 +45,12 @@ def main():
             for country in get_countries(base_url, downloader):
                 dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, country, topics,
                                                                     country_isos, topline_indicators, create_dataset_showcase)
-                dataset.update_from_yaml()
-                dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
-                dataset.generate_resource_view(1)
-                showcase.create_in_hdx()
-                showcase.add_dataset(dataset)
+                if dataset is not None:
+                    dataset.update_from_yaml()
+                    dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
+                    dataset.generate_resource_view(1)
+                    showcase.create_in_hdx()
+                    showcase.add_dataset(dataset)
 
         dataset = generate_topline_dataset(folder, topline_indicators, country_isos)
         logger.info('Adding topline indicators')

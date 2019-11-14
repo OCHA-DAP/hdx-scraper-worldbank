@@ -262,3 +262,8 @@ class TestWorldBank:
                                 'notes': 'Economic, Social, Environmental, Health, Education, Development and Energy indicators for Afghanistan',
                                 'url': 'https://data.worldbank.org/?locations=AF', 'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg',
                                 'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
+            dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
+                                                                [TestWorldBank.topics[1]], country_isos,
+                                                                topline_indicators, create_dataset_showcase)
+            assert dataset is None
+            assert showcase is None

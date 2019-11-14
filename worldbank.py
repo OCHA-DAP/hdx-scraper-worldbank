@@ -142,7 +142,7 @@ def generate_dataset_and_showcase(site_url, configuration, downloader, folder, c
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
-        return None, None, None, None, None, topic
+        return None, None, None, None, None, topicname
     dataset.set_expected_update_frequency('Every year')
 
     tag_mappings = configuration['tag_mappings']
@@ -467,8 +467,7 @@ def generate_all_datasets_showcases(configuration, downloader, folder, country, 
         dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
             generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic, topline_indicator_dict)
         if dataset is None:
-            if rows is not None:
-                ignore_topics.append(rows)
+            ignore_topics.append(rows)
         else:
             logger.info('Adding %s %s' % (country['name'], topic['value']))
             allrows.extend(rows[1:])
@@ -477,6 +476,8 @@ def generate_all_datasets_showcases(configuration, downloader, folder, country, 
             latest_years.add(latest_year)
             country_isos.append(country['iso3'])
             create_dataset_showcase(dataset, showcase, qc_indicators)
+    if len(ignore_topics) == len(topics):
+        return None, None
     topline_indicators.extend(topline_indicator_dict.values())
     return generate_combined_dataset_and_showcase(site_url, folder, country, sorted(alltags), topics, ignore_topics,
                                                   earliest_years, latest_years, allrows)
