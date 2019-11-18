@@ -46,7 +46,7 @@ def get_topics(base_url, downloader):
     response = downloader.download(url)
     json = response.json()
     topics = json[1]
-    for topic in topics:
+    for topic in json[1]:
         tags = list()
         value = topic['value']
         tag_name = value.lower()
@@ -176,7 +176,7 @@ def generate_dataset_and_showcase(site_url, configuration, downloader, folder, c
             year = int(metadata['date'])
             if year < earliest_year:
                 earliest_year = year
-            elif year > latest_year:
+            if year > latest_year:
                 latest_year = year
             rows.append({'Country Name': countryname, 'Country ISO3': countryiso, 'Year': year,
                          'Indicator Name': indicator_name, 'Indicator Code': indicator_code,
@@ -408,7 +408,7 @@ def generate_topline_dataset(base_url, downloader, folder, countries, topline_in
         year = int(row['date'])
         if year < earliest_year:
             earliest_year = year
-        elif year > latest_year:
+        if year > latest_year:
             latest_year = year
         topline_indicator = {
             'countryiso': countryiso.upper(),
