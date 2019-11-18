@@ -40,15 +40,15 @@ def main():
 
         topics = get_topics(base_url, downloader)
         countries = get_countries(base_url, downloader)
-        # for folder, country in progress_storing_tempdir('WorldBank', countries, 'iso3'):
-        #     dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, country, topics,
-        #                                                         create_dataset_showcase)
-        #     if dataset is not None:
-        #         dataset.update_from_yaml()
-        #         dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
-        #         dataset.generate_resource_view(1)
-        #         showcase.create_in_hdx()
-        #         showcase.add_dataset(dataset)
+        for folder, country in progress_storing_tempdir('WorldBank', countries, 'iso3'):
+            dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, country, topics,
+                                                                create_dataset_showcase)
+            if dataset is not None:
+                dataset.update_from_yaml()
+                dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
+                dataset.generate_resource_view(1)
+                showcase.create_in_hdx()
+                showcase.add_dataset(dataset)
 
         with temp_dir('WorldBank') as folder:
             dataset = generate_topline_dataset(base_url, downloader, folder, countries,
