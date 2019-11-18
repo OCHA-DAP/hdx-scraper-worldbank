@@ -48,9 +48,6 @@ class TestWorldBank:
     qc_indicators = [{'code': 'SH.STA.MMRT', 'name': 'Maternal mortality ratio (modeled estimate, per 100,000 live births)'},
                      {'code': 'SP.ADO.TFRT', 'name': 'Adolescent fertility rate (births per 1,000 women ages 15-19)'},
                      {'code': 'SH.MMR.RISK', 'name': 'Lifetime risk of maternal death (1 in:  rate varies by country)'}]
-    topline_indicator = {'countryiso': 'AFG', 'indicator': 'Adolescent fertility rate', 'source': 'World Bank',
-                         'url': 'http://papa/v2/en/country/AFG/indicator/SH.STA.MMRT;SG.LAW.CHMR;SP.ADO.TFRT;SH.MMR.RISK?source=2&format=json&per_page=10000',
-                         'year': 2017, 'unit': 'births per 1,000 women ages 15-19', 'value': 68.957}
     dataset = {'name': 'world-bank-gender-and-science-indicators-for-afghanistan',
                'title': 'Afghanistan - Gender and Science', 'maintainer': '196196be-6037-4488-8b71-d786adf4c081',
                'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '365',
@@ -70,6 +67,8 @@ class TestWorldBank:
     indicators2 = [{'page': 1, 'pages': 1, 'per_page': 10000, 'total': 236, 'sourceid': None, 'lastupdated': '2019-10-02'},
                    [{'indicator': {'id': 'SP.ADO.TFRT', 'value': 'Adolescent fertility rate (births per 1,000 women ages 15-19)'}, 'country': {'id': 'AF', 'value': 'Afghanistan'}, 'countryiso3code': 'AFG', 'date': '2016', 'value': 75.325, 'unit': '', 'obs_status': '', 'decimal': 0},
                     {'indicator': {'id': 'SH.MMR.RISK', 'value': 'Lifetime risk of maternal death (1 in:  rate varies by country)'}, 'country': {'id': 'AF', 'value': 'Afghanistan'}, 'countryiso3code': 'AFG', 'date': '2016', 'value': 30, 'unit': '', 'obs_status': '', 'decimal': 0}]]
+    indicatorst = [{'page': 1, 'pages': 1, 'per_page': 10000, 'total': 236, 'sourceid': None, 'lastupdated': '2019-10-02'},
+                   [{'indicator': {'id': 'SH.POP.TOTL', 'value': 'Population, total'}, 'country': {'id': 'AF', 'value': 'Afghanistan'}, 'countryiso3code': 'AFG', 'date': '2018', 'value': 37172386, 'unit': '', 'obs_status': '', 'decimal': 0}]]
 
     @pytest.fixture(scope='function')
     def configuration(self):
@@ -131,6 +130,11 @@ class TestWorldBank:
                     def fn():
                         return TestWorldBank.indicators2
                     response.json = fn
+                elif url == 'http://papa/v2/en/country/all/indicator/SP.POP.TOTL?source=2&mrnev=1&format=json&per_page=10000':
+                    def fn():
+                        return TestWorldBank.indicatorst
+                    response.json = fn
+
                 return response
         return Download()
 
@@ -170,10 +174,8 @@ class TestWorldBank:
         with temp_dir('worldbank') as folder:
             site_url = configuration.get_hdx_site_url()
             topic = TestWorldBank.topics[0]
-            topline_indicators_dict = dict()
             dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
-                generate_dataset_and_showcase(site_url, configuration, downloader, folder, TestWorldBank.country, topic,
-                                              topline_indicators_dict)
+                generate_dataset_and_showcase(site_url, configuration, downloader, folder, TestWorldBank.country, topic)
             assert dataset == TestWorldBank.dataset
             resource = dataset.get_resource()
             assert resource == TestWorldBank.resource
@@ -195,24 +197,55 @@ class TestWorldBank:
             assert earliest_year == 2016
             assert latest_year == 2017
             assert len(rows) == 9
-            assert topline_indicators_dict == {'SP.ADO.TFRT': TestWorldBank.topline_indicator}
 
             configuration['character_limit'] = 25
             configuration['indicator_subtract'] = 2
             dataset, _, _, _, _, _ = generate_dataset_and_showcase(site_url, configuration, downloader, folder,
-                                                                   TestWorldBank.country, topic, topline_indicators_dict)
+                                                                   TestWorldBank.country, topic)
             filename = '%s_%s.csv' % (slugify(topic['value']), TestWorldBank.country['iso3'])
             expected_file = join('tests', 'fixtures', 'split_%s' % filename)
             actual_file = join(folder, filename)
             assert_files_same(expected_file, actual_file)
 
-    def test_generate_topline_dataset(self, configuration):
+    def test_generate_all_datasets_showcases(self, configuration, downloader):
+        def create_dataset_showcase(dataset, showcase, qc_indicators):
+            pass
         with temp_dir('worldbank') as folder:
-            dataset = generate_topline_dataset(folder, [TestWorldBank.topline_indicator], ['AFG'])
+            dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
+                                                                TestWorldBank.topics, create_dataset_showcase)
+            assert dataset == {'name': 'world-bank-combined-indicators-for-afghanistan', 'title': 'Afghanistan - Economic, Social, Environmental, Health, Education, Development and Energy',
+                               'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '365',
+                               'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
+                               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the following topics which also exist as individual datasets on HDX: [Gender and Science](https://test-data.humdata.org/dataset/world-bank-gender-and-science-indicators-for-afghanistan).", 'dataset_date': '01/01/2016-12/31/2017'}
+            resources = dataset.get_resources()
+            assert resources == [{'name': 'Combined Indicators for Afghanistan', 'description': 'HXLated csv containing Economic, Social, Environmental, Health, Education, Development and Energy indicators',
+                                  'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'},
+                                 {'name': 'QuickCharts Combined Indicators for Afghanistan', 'description': 'QuickCharts resource',
+                                  'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'}]
+            filename = 'indicators_%s.csv' % TestWorldBank.country['iso3']
+            expected_file = join('tests', 'fixtures', filename)
+            actual_file = join(folder, filename)
+            assert_files_same(expected_file, actual_file)
+            assert showcase == {'name': 'world-bank-combined-indicators-for-afghanistan-showcase', 'title': 'Indicators for Afghanistan',
+                                'notes': 'Economic, Social, Environmental, Health, Education, Development and Energy indicators for Afghanistan',
+                                'url': 'https://data.worldbank.org/?locations=AF', 'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg',
+                                'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
+            dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
+                                                                [TestWorldBank.topics[1]], create_dataset_showcase)
+            assert dataset is None
+            assert showcase is None
+
+    def test_generate_topline_dataset(self, configuration, downloader):
+        with temp_dir('worldbank') as folder:
+            dataset = generate_topline_dataset(configuration['base_url'], downloader, folder, [TestWorldBank.country], configuration['topline_indicators'])
             assert dataset == {'name': 'world-bank-country-topline-indicators', 'title': 'Topline Indicators',
                                'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx', 'subnational': '0',
-                               'groups': [{'name': 'afg'}], 'data_update_frequency': '365', 'dataset_date': '01/01/2017-12/31/2017',
+                               'groups': [{'name': 'afg'}], 'data_update_frequency': '365', 'dataset_date': '01/01/2018-12/31/2000',
                                'tags': [{'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
+            filename = 'worldbank_topline.csv'
+            expected_file = join('tests', 'fixtures', filename)
+            actual_file = join(folder, filename)
+            assert_files_same(expected_file, actual_file)
 
     def test_generate_resource_view(self, configuration):
         dataset = Dataset(TestWorldBank.dataset)
@@ -236,34 +269,3 @@ class TestWorldBank:
         result = generate_resource_view(dataset, qc_indicators)
         assert result is None
 
-    def test_generate_all_datasets_showcases(self, configuration, downloader):
-        def create_dataset_showcase(dataset, showcase, qc_indicators):
-            pass
-        with temp_dir('worldbank') as folder:
-            country_isos = list()
-            topline_indicators = list()
-            dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
-                                                                TestWorldBank.topics, country_isos,
-                                                                topline_indicators, create_dataset_showcase)
-            assert dataset == {'name': 'world-bank-combined-indicators-for-afghanistan', 'title': 'Afghanistan - Economic, Social, Environmental, Health, Education, Development and Energy',
-                               'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '365',
-                               'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
-                               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the following topics which also exist as individual datasets on HDX: [Gender and Science](https://test-data.humdata.org/dataset/world-bank-gender-and-science-indicators-for-afghanistan).", 'dataset_date': '01/01/2016-12/31/2017'}
-            resources = dataset.get_resources()
-            assert resources == [{'name': 'Combined Indicators for Afghanistan', 'description': 'HXLated csv containing Economic, Social, Environmental, Health, Education, Development and Energy indicators',
-                                  'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'},
-                                 {'name': 'QuickCharts Combined Indicators for Afghanistan', 'description': 'QuickCharts resource',
-                                  'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'}]
-            filename = 'indicators_%s.csv' % TestWorldBank.country['iso3']
-            expected_file = join('tests', 'fixtures', filename)
-            actual_file = join(folder, filename)
-            assert_files_same(expected_file, actual_file)
-            assert showcase == {'name': 'world-bank-combined-indicators-for-afghanistan-showcase', 'title': 'Indicators for Afghanistan',
-                                'notes': 'Economic, Social, Environmental, Health, Education, Development and Energy indicators for Afghanistan',
-                                'url': 'https://data.worldbank.org/?locations=AF', 'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg',
-                                'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
-            dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
-                                                                [TestWorldBank.topics[1]], country_isos,
-                                                                topline_indicators, create_dataset_showcase)
-            assert dataset is None
-            assert showcase is None

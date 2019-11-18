@@ -75,9 +75,11 @@ def get_countries(base_url, downloader):
     url = '%sv2/en/country?format=json&per_page=10000' % base_url
     response = downloader.download(url)
     json = response.json()
+    countries = list()
     for country in json[1]:
         if country['region']['value'] != 'Aggregates':
-            yield {'name': country['name'], 'iso3': country['id'], 'iso2': country['iso2Code']}
+            countries.append({'name': country['name'], 'iso3': country['id'], 'iso2': country['iso2Code']})
+    return countries
 
 
 def get_unit(indicator_name):
@@ -124,7 +126,7 @@ def get_combined_dataset_name(countryname):
     return slugify('World Bank Combined Indicators for %s' % countryname).lower()
 
 
-def generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic, topline_indicators):
+def generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic):
     countryname = country['name']
     topicname = topic['value']
     title = '%s - %s' % (countryname, topicname)
@@ -185,25 +187,6 @@ def generate_dataset_and_showcase(site_url, configuration, downloader, folder, c
             indicator_dict[year] = value
             indicators_dict[indicator_code] = indicator_dict
             indicators_len_dict[len_indicator_code] = indicators_dict
-            if indicator_code in configuration['topline_indicators']:
-                topline_indicator = topline_indicators.get(indicator_code)
-                if topline_indicator is None:
-                    topline_year = 0
-                else:
-                    topline_year = topline_indicator['year']
-                if year > topline_year:
-                    unit = get_unit(indicator_name)
-                    topline_indicator_name = indicator_name.replace(' (%s)' % unit, '')
-                    topline_indicator = {
-                        'countryiso': countryiso.upper(),
-                        'indicator': topline_indicator_name,
-                        'source': 'World Bank',
-                        'url': url,
-                        'year': year,
-                        'unit': unit,
-                        'value': value
-                    }
-                    topline_indicators[indicator_code] = topline_indicator
 
     base_url = configuration['base_url']
     indicator_limit = configuration['indicator_limit']
@@ -365,7 +348,45 @@ def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topi
     return dataset, showcase
 
 
-def generate_topline_dataset(folder, topline_indicators, country_isos):
+def generate_all_datasets_showcases(configuration, downloader, folder, country, topics, create_dataset_showcase):
+    site_url = configuration.get_hdx_site_url()
+
+    allrows = list()
+    alltags = set()
+    earliest_years = set()
+    latest_years = set()
+    ignore_topics = list()
+    for topic in topics:
+        dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
+            generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic)
+        if dataset is None:
+            ignore_topics.append(rows)
+        else:
+            logger.info('Adding %s %s' % (country['name'], topic['value']))
+            allrows.extend(rows[1:])
+            alltags.update(dataset.get_tags())
+            earliest_years.add(earliest_year)
+            latest_years.add(latest_year)
+            create_dataset_showcase(dataset, showcase, qc_indicators)
+    if len(ignore_topics) == len(topics):
+        return None, None
+    return generate_combined_dataset_and_showcase(site_url, folder, country, sorted(alltags), topics, ignore_topics,
+                                                  earliest_years, latest_years, allrows)
+
+
+def generate_topline_dataset(base_url, downloader, folder, countries, topline_indicators):
+    tlstr = ';'.join(topline_indicators)
+    url = '%sv2/en/country/all/indicator/%s?source=2&mrnev=1&format=json&per_page=10000' % (base_url, tlstr)
+    response = downloader.download(url)
+    json = response.json()
+    if json[0]['total'] == 0:
+        raise ValueError('No values returned!')
+    if json[0]['pages'] != 1:
+        raise ValueError('Not expecting more than one page!')
+    allcountryisos = [x['iso3'] for x in countries]
+    earliest_year = 10000
+    latest_year = 0
+    rows = list()
     title = 'Topline Indicators'
     slugified_name = slugify('World Bank Country Topline Indicators').lower()
 
@@ -373,20 +394,37 @@ def generate_topline_dataset(folder, topline_indicators, country_isos):
         'name': slugified_name,
         'title': title,
     })
+    for row in json[1]:
+        countryiso = row['countryiso3code']
+        if countryiso not in allcountryisos:
+            continue
+        try:
+            dataset.add_country_location(countryiso)
+        except HDXError:
+            continue
+        indicator_name = row['indicator']['value']
+        unit = get_unit(indicator_name)
+        topline_indicator_name = indicator_name.replace(' (%s)' % unit, '')
+        year = int(row['date'])
+        if year < earliest_year:
+            earliest_year = year
+        elif year > latest_year:
+            latest_year = year
+        topline_indicator = {
+            'countryiso': countryiso.upper(),
+            'indicator': topline_indicator_name,
+            'source': 'World Bank',
+            'url': url,
+            'year': year,
+            'unit': unit,
+            'value': row['value']
+        }
+        rows.append(topline_indicator)
+
     dataset.set_maintainer('196196be-6037-4488-8b71-d786adf4c081')
     dataset.set_organization('hdx')
     dataset.set_subnational(False)
-    dataset.add_country_locations(country_isos)
     dataset.set_expected_update_frequency('Every year')
-
-    earliest_year = 10000
-    latest_year = 0
-    for topline_indicator in topline_indicators:
-        year = topline_indicator['year']
-        if year > latest_year:
-            latest_year = year
-        if year < earliest_year:
-            earliest_year = year
     dataset.set_dataset_year_range(earliest_year, latest_year)
 
     dataset.add_tags(['indicators'])
@@ -405,10 +443,10 @@ def generate_topline_dataset(folder, topline_indicators, country_isos):
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerow(hxl)
-        for topline_indicator in topline_indicators:
-            topline_indicator['date'] = '%d-01-01' % topline_indicator['year']
-            del topline_indicator['year']
-            writer.writerow(topline_indicator)
+        for row in rows:
+            row['date'] = '%d-01-01' % row['year']
+            del row['year']
+            writer.writerow(row)
 
     resource_data = {
         'name': 'topline_indicators',
@@ -451,34 +489,3 @@ def generate_resource_view(dataset, indicators):
     else:
         resourceview = None
     return resourceview
-
-
-def generate_all_datasets_showcases(configuration, downloader, folder, country, topics, country_isos,
-                                    topline_indicators, create_dataset_showcase):
-    site_url = configuration.get_hdx_site_url()
-
-    allrows = list()
-    alltags = set()
-    earliest_years = set()
-    latest_years = set()
-    topline_indicator_dict = dict()
-    ignore_topics = list()
-    for topic in topics:
-        dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
-            generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic, topline_indicator_dict)
-        if dataset is None:
-            ignore_topics.append(rows)
-        else:
-            logger.info('Adding %s %s' % (country['name'], topic['value']))
-            allrows.extend(rows[1:])
-            alltags.update(dataset.get_tags())
-            earliest_years.add(earliest_year)
-            latest_years.add(latest_year)
-            country_isos.append(country['iso3'])
-            create_dataset_showcase(dataset, showcase, qc_indicators)
-    if len(ignore_topics) == len(topics):
-        return None, None
-    topline_indicators.extend(topline_indicator_dict.values())
-    return generate_combined_dataset_and_showcase(site_url, folder, country, sorted(alltags), topics, ignore_topics,
-                                                  earliest_years, latest_years, allrows)
-
