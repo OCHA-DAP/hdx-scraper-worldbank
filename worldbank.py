@@ -292,7 +292,7 @@ def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topi
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
-        return None, None
+        return None, None, None
     dataset.set_expected_update_frequency('Every year')
     dataset.add_tags(tags)
     topiclist = list()
@@ -308,10 +308,18 @@ def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topi
     earliest_year = sorted(earliest_years)[0]
     latest_year = sorted(latest_years)[-1]
     dataset.set_dataset_year_range(earliest_year, latest_year)
+    bites_disabled = [True, True, True]
     cutdownrows = list()
     for row in rows:
-        if row['Indicator Code'] in ['SP.POP.TOTL', 'SP.DYN.LE00.IN', 'SE.PRM.ENRR']:
+        if row['Indicator Code'] == 'SP.POP.TOTL':
             cutdownrows.append(row)
+            bites_disabled[0] = False
+        if row['Indicator Code'] == 'SP.DYN.LE00.IN':
+            cutdownrows.append(row)
+            bites_disabled[1] = False
+        if row['Indicator Code'] == 'SE.PRM.ENRR':
+            cutdownrows.append(row)
+            bites_disabled[2] = False
     rows.insert(0, hxlrow)
     cutdownrows.insert(0, hxlrow)
     filepath = join(folder, 'indicators_%s.csv' % countryiso)
@@ -345,7 +353,7 @@ def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topi
     })
     showcase.add_tags(tags)
 
-    return dataset, showcase
+    return dataset, showcase, bites_disabled
 
 
 def generate_all_datasets_showcases(configuration, downloader, folder, country, topics, create_dataset_showcase):
@@ -369,7 +377,7 @@ def generate_all_datasets_showcases(configuration, downloader, folder, country, 
             latest_years.add(latest_year)
             create_dataset_showcase(dataset, showcase, qc_indicators)
     if len(ignore_topics) == len(topics):
-        return None, None
+        return None, None, None
     return generate_combined_dataset_and_showcase(site_url, folder, country, sorted(alltags), topics, ignore_topics,
                                                   earliest_years, latest_years, allrows)
 

@@ -256,16 +256,17 @@ class TestWorldBank:
             assert_files_same(expected_file, actual_file)
 
     def test_generate_combined_dataset_and_showcase(self):
-        dataset, showcase = generate_combined_dataset_and_showcase(None, None, TestWorldBank.madeupcountry, None, None, None, None, None, None)
+        dataset, showcase, bites_disabled = generate_combined_dataset_and_showcase(None, None, TestWorldBank.madeupcountry, None, None, None, None, None, None)
         assert dataset is None
         assert showcase is None
+        assert bites_disabled is None
 
     def test_generate_all_datasets_showcases(self, configuration, downloader):
         def create_dataset_showcase(dataset, showcase, qc_indicators):
             pass
         with temp_dir('worldbank') as folder:
-            dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
-                                                                TestWorldBank.topics[:4], create_dataset_showcase)
+            dataset, showcase, bites_disabled = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
+                                                                                TestWorldBank.topics[:4], create_dataset_showcase)
             assert dataset == {'name': 'world-bank-combined-indicators-for-afghanistan', 'title': 'Afghanistan - Economic, Social, Environmental, Health, Education, Development and Energy',
                                'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '365',
                                'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'health', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
@@ -283,10 +284,12 @@ class TestWorldBank:
                                 'notes': 'Economic, Social, Environmental, Health, Education, Development and Energy indicators for Afghanistan',
                                 'url': 'https://data.worldbank.org/?locations=AF', 'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg',
                                 'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'health', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
-            dataset, showcase = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
-                                                                [TestWorldBank.topics[1]], create_dataset_showcase)
+            assert bites_disabled == [False, True, True]
+            dataset, showcase, bites_disabled = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
+                                                                                [TestWorldBank.topics[1]], create_dataset_showcase)
             assert dataset is None
             assert showcase is None
+            assert bites_disabled is None
 
             with pytest.raises(ValueError):
                 _ = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
