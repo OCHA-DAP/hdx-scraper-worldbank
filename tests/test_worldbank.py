@@ -220,7 +220,7 @@ class TestWorldBank:
             site_url = configuration.get_hdx_site_url()
             topic = TestWorldBank.topics[0]
             dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
-                generate_dataset_and_showcase(site_url, configuration, downloader, folder, TestWorldBank.country, topic)
+                generate_dataset_and_showcase(configuration, downloader, folder, TestWorldBank.country, topic)
             assert dataset == TestWorldBank.dataset
             resource = dataset.get_resource()
             assert resource == TestWorldBank.resource
@@ -243,12 +243,12 @@ class TestWorldBank:
             assert latest_year == 2017
             assert len(rows) == 9
 
-            dataset, _, _, _, _, topicname = generate_dataset_and_showcase(site_url, configuration, downloader, folder,
+            dataset, _, _, _, _, topicname = generate_dataset_and_showcase(configuration, downloader, folder,
                                                                            TestWorldBank.madeupcountry, topic)
             assert topicname == 'Gender and Science'
             configuration['character_limit'] = 25
             configuration['indicator_subtract'] = 2
-            dataset, _, _, _, _, _ = generate_dataset_and_showcase(site_url, configuration, downloader, folder,
+            dataset, _, _, _, _, _ = generate_dataset_and_showcase(configuration, downloader, folder,
                                                                    TestWorldBank.country, topic)
             filename = '%s_%s.csv' % (slugify(topic['value']), TestWorldBank.country['iso3'])
             expected_file = join('tests', 'fixtures', 'split_%s' % filename)

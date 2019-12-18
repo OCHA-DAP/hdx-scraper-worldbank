@@ -126,7 +126,7 @@ def get_combined_dataset_name(countryname):
     return slugify('World Bank Combined Indicators for %s' % countryname).lower()
 
 
-def generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic):
+def generate_dataset_and_showcase(configuration, downloader, folder, country, topic):
     countryname = country['name']
     topicname = topic['value']
     title = '%s - %s' % (countryname, topicname)
@@ -227,7 +227,7 @@ def generate_dataset_and_showcase(site_url, configuration, downloader, folder, c
         indicator_names.add((indicator_name.strip()))
     comb_dsname = get_combined_dataset_name(countryname)
     notes = ["Contains data from the World Bank's [data portal](http://data.worldbank.org/). ",
-             'There is also a [consolidated country dataset](%s/dataset/%s) on HDX.\n\n' % (site_url, comb_dsname),
+             'There is also a [consolidated country dataset](%s) on HDX.\n\n' % (configuration.get_dataset_url(comb_dsname)),
              topic['sourceNote'], '\n\nIndicators: %s' % ', '.join(sorted(indicator_names))]
     dataset['notes'] = ''.join(notes)
 
@@ -273,7 +273,7 @@ def generate_dataset_and_showcase(site_url, configuration, downloader, folder, c
     return dataset, showcase, qc_indicators, earliest_year, latest_year, rows
 
 
-def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topics, ignore_topics, earliest_years,
+def generate_combined_dataset_and_showcase(configuration, folder, country, tags, topics, ignore_topics, earliest_years,
                                            latest_years, rows):
     indicators = 'Economic, Social, Environmental, Health, Education, Development and Energy'
     countryname = country['name']
@@ -301,7 +301,7 @@ def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topi
         if topicname in ignore_topics:
             continue
         topic_dataset_name = get_topic_dataset_name(topicname, countryname)
-        topiclist.append('[%s](%s/dataset/%s)' % (topicname, site_url, topic_dataset_name))
+        topiclist.append('[%s](%s)' % (topicname, configuration.get_dataset_url(topic_dataset_name)))
     notes = ["Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the ",
              "following topics which also exist as individual datasets on HDX: %s." % ', '.join(topiclist)]
     dataset['notes'] = ''.join(notes)
@@ -357,8 +357,6 @@ def generate_combined_dataset_and_showcase(site_url, folder, country, tags, topi
 
 
 def generate_all_datasets_showcases(configuration, downloader, folder, country, topics, create_dataset_showcase):
-    site_url = configuration.get_hdx_site_url()
-
     allrows = list()
     alltags = set()
     earliest_years = set()
@@ -366,7 +364,7 @@ def generate_all_datasets_showcases(configuration, downloader, folder, country, 
     ignore_topics = list()
     for topic in topics:
         dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
-            generate_dataset_and_showcase(site_url, configuration, downloader, folder, country, topic)
+            generate_dataset_and_showcase(configuration, downloader, folder, country, topic)
         if dataset is None:
             ignore_topics.append(rows)
         else:
@@ -378,7 +376,7 @@ def generate_all_datasets_showcases(configuration, downloader, folder, country, 
             create_dataset_showcase(dataset, showcase, qc_indicators)
     if len(ignore_topics) == len(topics):
         return None, None, None
-    return generate_combined_dataset_and_showcase(site_url, folder, country, sorted(alltags), topics, ignore_topics,
+    return generate_combined_dataset_and_showcase(configuration, folder, country, sorted(alltags), topics, ignore_topics,
                                                   earliest_years, latest_years, allrows)
 
 

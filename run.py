@@ -45,7 +45,7 @@ def main():
                                                                                 country, topics, create_dataset_showcase)
             if dataset is not None:
                 dataset.update_from_yaml()
-                dataset.generate_resource_view(1, bites_disabled)
+                dataset.generate_resource_view(1, bites_disabled=bites_disabled)
                 dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
                 showcase.create_in_hdx()
                 showcase.add_dataset(dataset)
