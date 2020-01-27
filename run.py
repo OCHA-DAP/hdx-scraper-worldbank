@@ -23,7 +23,7 @@ lookup = 'hdx-scraper-worldbank'
 
 def create_dataset_showcase(dataset, showcase, qc_indicators):
     dataset.update_from_yaml()
-    dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
+    dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False, updated_by_script='HDX Scraper: World Bank')
     resource_view = generate_resource_view(dataset, qc_indicators)
     if resource_view:
         resource_view.create_in_hdx()
