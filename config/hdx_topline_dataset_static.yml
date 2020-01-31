@@ -1,5 +1,4 @@
-license_id: "cc-by-igo"
-subnational: 1  # has to be 0 or 1
+license_id: "cc-by"
 notes: "Data used to update country toplines in HDX. Contains data from World Bank's [data portal](http://data.worldbank.org/)."
 caveats: ""
 methodology: "Registry"
