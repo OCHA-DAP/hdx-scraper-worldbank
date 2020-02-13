@@ -46,7 +46,7 @@ def main():
             if dataset is not None:
                 dataset.update_from_yaml()
                 dataset.generate_resource_view(1, bites_disabled=bites_disabled)
-                dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False)
+                dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False, updated_by_script='HDX Scraper: WorldBank')
                 showcase.create_in_hdx()
                 showcase.add_dataset(dataset)
 
@@ -55,7 +55,7 @@ def main():
                                                configuration['topline_indicators'])
             logger.info('Adding topline indicators')
             dataset.update_from_yaml(path=join('config', 'hdx_topline_dataset_static.yml'))
-            dataset.create_in_hdx()
+            dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False, updated_by_script='HDX Scraper: WorldBank')
 
 
 if __name__ == '__main__':

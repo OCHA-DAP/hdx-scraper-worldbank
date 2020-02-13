@@ -7,20 +7,17 @@ World Bank:
 Generates World Bank datasets.
 
 """
-import csv
 import json
 import logging
 
 import re
 from collections import OrderedDict
-from os.path import join
 
 from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
-from hdx.data.resource import Resource
 from hdx.data.resource_view import ResourceView
 from hdx.data.showcase import Showcase
-from hdx.utilities.dictandlist import write_list_to_csv, dict_of_lists_add
+from hdx.utilities.dictandlist import dict_of_lists_add
 from slugify import slugify
 
 logger = logging.getLogger(__name__)
@@ -144,7 +141,7 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
         dataset.add_country_location(countryiso)
     except HDXError as e:
         logger.exception('%s has a problem! %s' % (countryname, e))
-        return None, None, None, None, None, topicname
+        return None, None, None, None, topicname
     dataset.set_expected_update_frequency('Every year')
 
     tag_mappings = configuration['tag_mappings']
@@ -156,16 +153,13 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
     tags.append('indicators')
     dataset.add_tags(tags)
 
-    earliest_year = 10000
-    latest_year = 0
+    years = set()
     qc_indicators = [None, None, None]
     indicator_names_dict = dict()
     indicators_len_dict = dict()
     rows = list()
 
     def add_rows(jsondata):
-        nonlocal earliest_year
-        nonlocal latest_year
         for metadata in jsondata:
             value = metadata['value']
             if value is None:
@@ -174,10 +168,7 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
             indicator_name = metadata['indicator']['value']
             indicator_names_dict[indicator_code] = indicator_name
             year = int(metadata['date'])
-            if year < earliest_year:
-                earliest_year = year
-            if year > latest_year:
-                latest_year = year
+            years.add(year)
             rows.append({'Country Name': countryname, 'Country ISO3': countryiso, 'Year': year,
                          'Indicator Name': indicator_name, 'Indicator Code': indicator_code,
                          'Value': value})
@@ -214,9 +205,9 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
             add_rows(json[1])
             i += indicator_limit
 
-    if earliest_year == 10000:
+    if len(years) == 0:
         logger.error('%s has no data!' % title)
-        return None, None, None, None, None, topicname
+        return None, None, None, None, topicname
 
     indicator_names = set()
     for indicator_name_long in indicator_names_dict.values():
@@ -247,19 +238,14 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
 
     rows.insert(0, hxlrow)
     slug_topicname = slugify(topicname)
-    filepath = join(folder, '%s_%s.csv' % (slug_topicname, countryiso))
-    write_list_to_csv(rows, filepath, headers=headers)
-
-    resource_data = {
+    filename = '%s_%s.csv' % (slug_topicname, countryiso)
+    resourcedata = {
         'name': resource_name % (topicname, countryname),
         'description': 'HXLated csv containing %s indicators' % topicname,
     }
-    resource = Resource(resource_data)
-    resource.set_file_type('csv')
-    resource.set_file_to_upload(filepath)
-    dataset.add_update_resource(resource)
+    dataset.generate_resource_from_rows(folder, filename, rows, resourcedata, headers=headers)
 
-    dataset.set_dataset_year_range(earliest_year, latest_year)
+    years = dataset.set_dataset_year_range(years)
     dataset.set_quickchart_resource(quickchart_resourceno)
 
     showcase = Showcase({
@@ -270,11 +256,10 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
         'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg'
     })
     showcase.add_tags(tags)
-    return dataset, showcase, qc_indicators, earliest_year, latest_year, rows
+    return dataset, showcase, qc_indicators, years, rows
 
 
-def generate_combined_dataset_and_showcase(configuration, folder, country, tags, topics, ignore_topics, earliest_years,
-                                           latest_years, rows):
+def generate_combined_dataset_and_showcase(configuration, folder, country, tags, topics, ignore_topics, allyears, rows):
     indicators = 'Economic, Social, Environmental, Health, Education, Development and Energy'
     countryname = country['name']
     title = '%s - %s' % (countryname, indicators)
@@ -305,9 +290,7 @@ def generate_combined_dataset_and_showcase(configuration, folder, country, tags,
     notes = ["Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the ",
              "following topics which also exist as individual datasets on HDX: %s." % ', '.join(topiclist)]
     dataset['notes'] = ''.join(notes)
-    earliest_year = sorted(earliest_years)[0]
-    latest_year = sorted(latest_years)[-1]
-    dataset.set_dataset_year_range(earliest_year, latest_year)
+    dataset.set_dataset_year_range(allyears)
     bites_disabled = [True, True, True]
     cutdownrows = list()
     for row in rows:
@@ -322,27 +305,19 @@ def generate_combined_dataset_and_showcase(configuration, folder, country, tags,
             bites_disabled[2] = False
     rows.insert(0, hxlrow)
     cutdownrows.insert(0, hxlrow)
-    filepath = join(folder, 'indicators_%s.csv' % countryiso)
-    write_list_to_csv(rows, filepath, headers=headers)
-    resource_data = {
+    filename = 'indicators_%s.csv' % countryiso
+    resourcedata = {
         'name': resource_name % ('Combined', countryname),
         'description': 'HXLated csv containing %s indicators' % indicators,
     }
-    resource = Resource(resource_data)
-    resource.set_file_type('csv')
-    resource.set_file_to_upload(filepath)
-    dataset.add_update_resource(resource)
+    dataset.generate_resource_from_rows(folder, filename, rows, resourcedata, headers=headers)
 
-    filepath = join(folder, 'qc_indicators_%s.csv' % countryiso)
-    write_list_to_csv(cutdownrows, filepath, headers=headers)
-    resource_data = {
+    filename = 'qc_indicators_%s.csv' % countryiso
+    resourcedata = {
         'name': 'QuickCharts %s' % resource_name % ('Combined', countryname),
         'description': 'QuickCharts resource',
     }
-    resource = Resource(resource_data)
-    resource.set_file_type('csv')
-    resource.set_file_to_upload(filepath)
-    dataset.add_update_resource(resource)
+    dataset.generate_resource_from_rows(folder, filename, cutdownrows, resourcedata, headers=headers)
 
     showcase = Showcase({
         'name': '%s-showcase' % slugified_name,
@@ -359,11 +334,10 @@ def generate_combined_dataset_and_showcase(configuration, folder, country, tags,
 def generate_all_datasets_showcases(configuration, downloader, folder, country, topics, create_dataset_showcase):
     allrows = list()
     alltags = set()
-    earliest_years = set()
-    latest_years = set()
+    allyears = set()
     ignore_topics = list()
     for topic in topics:
-        dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
+        dataset, showcase, qc_indicators, years, rows = \
             generate_dataset_and_showcase(configuration, downloader, folder, country, topic)
         if dataset is None:
             ignore_topics.append(rows)
@@ -371,13 +345,12 @@ def generate_all_datasets_showcases(configuration, downloader, folder, country, 
             logger.info('Adding %s %s' % (country['name'], topic['value']))
             allrows.extend(rows[1:])
             alltags.update(dataset.get_tags())
-            earliest_years.add(earliest_year)
-            latest_years.add(latest_year)
+            allyears.update(years)
             create_dataset_showcase(dataset, showcase, qc_indicators)
     if len(ignore_topics) == len(topics):
         return None, None, None
     return generate_combined_dataset_and_showcase(configuration, folder, country, sorted(alltags), topics, ignore_topics,
-                                                  earliest_years, latest_years, allrows)
+                                                  allyears, allrows)
 
 
 def generate_topline_dataset(base_url, downloader, folder, countries, topline_indicators):
@@ -390,9 +363,10 @@ def generate_topline_dataset(base_url, downloader, folder, countries, topline_in
     if json[0]['pages'] != 1:
         raise ValueError('Not expecting more than one page!')
     allcountryisos = [x['iso3'] for x in countries]
-    earliest_year = 10000
-    latest_year = 0
-    rows = list()
+    headers = ['countryiso', 'indicator', 'source', 'url', 'date', 'unit', 'value']
+    rows = [{'countryiso': '#country+code', 'indicator': '#indicator+name', 'source': '#meta+source',
+             'url': '#meta+url', 'date': '#date', 'unit': '#indicator+unit', 'value': '#value+amount'}]
+
     title = 'Topline Indicators'
     slugified_name = slugify('World Bank Country Topline Indicators').lower()
 
@@ -400,6 +374,7 @@ def generate_topline_dataset(base_url, downloader, folder, countries, topline_in
         'name': slugified_name,
         'title': title,
     })
+    years = set()
     for row in json[1]:
         countryiso = row['countryiso3code']
         if countryiso not in allcountryisos:
@@ -412,16 +387,13 @@ def generate_topline_dataset(base_url, downloader, folder, countries, topline_in
         unit = get_unit(indicator_name)
         topline_indicator_name = indicator_name.replace(' (%s)' % unit, '')
         year = int(row['date'])
-        if year < earliest_year:
-            earliest_year = year
-        if year > latest_year:
-            latest_year = year
+        years.add(year)
         topline_indicator = {
             'countryiso': countryiso.upper(),
             'indicator': topline_indicator_name,
             'source': 'World Bank',
             'url': url,
-            'year': year,
+            'date': '%d-01-01' % year,
             'unit': unit,
             'value': row['value']
         }
@@ -431,38 +403,14 @@ def generate_topline_dataset(base_url, downloader, folder, countries, topline_in
     dataset.set_organization('hdx')
     dataset.set_subnational(False)
     dataset.set_expected_update_frequency('Every year')
-    dataset.set_dataset_year_range(earliest_year, latest_year)
-
+    dataset.set_dataset_year_range(years)
     dataset.add_tags(['indicators'])
-    filepath = join(folder, 'worldbank_topline.csv')
-    hxl = {
-        'countryiso': '#country+code',
-        'indicator': '#indicator+name',
-        'source': '#meta+source',
-        'url': '#meta+url',
-        'date': '#date',
-        'unit': '#indicator+unit',
-        'value': '#value+amount'
-    }
-    with open(filepath, 'w') as csvfile:
-        fieldnames = ['countryiso', 'indicator', 'source', 'url', 'date', 'unit', 'value']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerow(hxl)
-        for row in rows:
-            row['date'] = '%d-01-01' % row['year']
-            del row['year']
-            writer.writerow(row)
 
-    resource_data = {
+    resourcedata = {
         'name': 'topline_indicators',
-        'description': 'Country topline indicators',
-        'format': 'csv'
+        'description': 'Country topline indicators'
     }
-    resource = Resource(resource_data)
-    resource.set_file_to_upload(filepath)
-    dataset.add_update_resource(resource)
-
+    dataset.generate_resource_from_rows(folder, 'worldbank_topline.csv', rows, resourcedata, headers=headers)
     return dataset
 
 

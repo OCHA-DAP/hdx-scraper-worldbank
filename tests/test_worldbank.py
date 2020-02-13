@@ -217,9 +217,8 @@ class TestWorldBank:
 
     def test_generate_dataset_and_showcase(self, configuration, downloader):
         with temp_dir('worldbank') as folder:
-            site_url = configuration.get_hdx_site_url()
             topic = TestWorldBank.topics[0]
-            dataset, showcase, qc_indicators, earliest_year, latest_year, rows = \
+            dataset, showcase, qc_indicators, years, rows = \
                 generate_dataset_and_showcase(configuration, downloader, folder, TestWorldBank.country, topic)
             assert dataset == TestWorldBank.dataset
             resource = dataset.get_resource()
@@ -239,16 +238,15 @@ class TestWorldBank:
                                          {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                                          {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
             assert qc_indicators == TestWorldBank.qc_indicators
-            assert earliest_year == 2016
-            assert latest_year == 2017
+            assert years == [2016, 2017]
             assert len(rows) == 9
 
-            dataset, _, _, _, _, topicname = generate_dataset_and_showcase(configuration, downloader, folder,
-                                                                           TestWorldBank.madeupcountry, topic)
+            dataset, _, _, _, topicname = generate_dataset_and_showcase(configuration, downloader, folder,
+                                                                        TestWorldBank.madeupcountry, topic)
             assert topicname == 'Gender and Science'
             configuration['character_limit'] = 25
             configuration['indicator_subtract'] = 2
-            dataset, _, _, _, _, _ = generate_dataset_and_showcase(configuration, downloader, folder,
+            dataset, _, _, _, _ = generate_dataset_and_showcase(configuration, downloader, folder,
                                                                    TestWorldBank.country, topic)
             filename = '%s_%s.csv' % (slugify(topic['value']), TestWorldBank.country['iso3'])
             expected_file = join('tests', 'fixtures', 'split_%s' % filename)
@@ -256,7 +254,7 @@ class TestWorldBank:
             assert_files_same(expected_file, actual_file)
 
     def test_generate_combined_dataset_and_showcase(self):
-        dataset, showcase, bites_disabled = generate_combined_dataset_and_showcase(None, None, TestWorldBank.madeupcountry, None, None, None, None, None, None)
+        dataset, showcase, bites_disabled = generate_combined_dataset_and_showcase(None, None, TestWorldBank.madeupcountry, None, None, None, None, None)
         assert dataset is None
         assert showcase is None
         assert bites_disabled is None
