@@ -63,9 +63,9 @@ class TestWorldBank:
                         {'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
-               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/). There is also a [consolidated country dataset](https://test-data.humdata.org/dataset/world-bank-combined-indicators-for-afghanistan) on HDX.\n\nGender equality is a core development objective...\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio",
+               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/). There is also a [consolidated country dataset](https://test-data.humdata.org/dataset/world-bank-combined-indicators-for-afghanistan) on HDX.\n\nGender equality is a core development objective...",
                'dataset_date': '01/01/2016-12/31/2017', 'dataset_preview': 'resource_id'}
-    resource = {'name': 'Gender and Science Indicators for Afghanistan', 'description': 'HXLated csv containing Gender and Science indicators',
+    resource = {'name': 'Gender and Science Indicators for Afghanistan', 'description': 'HXLated csv containing Gender and Science indicators\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio',
                 'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload', 'dataset_preview_enabled': 'True'}
     indicatorsp = [{'page': 1, 'pages': 1, 'per_page': 10000, 'total': 0, 'sourceid': None, 'lastupdated': '2019-10-02'},
                    [{'indicator': {'id': 'SI.POV.GAPS', 'value': 'Poverty gap at $1.90 a day (2011 PPP) (%)'}, 'country': {'id': 'AW','value': 'Aruba'}, 'countryiso3code': 'ABW', 'date': '2019', 'value': None, 'unit': '', 'obs_status': '', 'decimal': 1}]]

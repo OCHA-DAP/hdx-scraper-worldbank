@@ -209,17 +209,10 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
         logger.error('%s has no data!' % title)
         return None, None, None, None, topicname
 
-    indicator_names = set()
-    for indicator_name_long in indicator_names_dict.values():
-        ind0 = re.sub(r'\s+', ' ', indicator_name_long)
-        ind1, _, _ = ind0.partition(',')
-        ind2, _, _ = ind1.partition('(')
-        indicator_name, _, _ = ind2.partition(':')
-        indicator_names.add((indicator_name.strip()))
     comb_dsname = get_combined_dataset_name(countryname)
     notes = ["Contains data from the World Bank's [data portal](http://data.worldbank.org/). ",
              'There is also a [consolidated country dataset](%s) on HDX.\n\n' % (configuration.get_dataset_url(comb_dsname)),
-             topic['sourceNote'], '\n\nIndicators: %s' % ', '.join(sorted(indicator_names))]
+             topic['sourceNote']]
     dataset['notes'] = ''.join(notes)
 
     for len_indicator_code in sorted(indicators_len_dict):
@@ -239,9 +232,16 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
     rows.insert(0, hxlrow)
     slug_topicname = slugify(topicname)
     filename = '%s_%s.csv' % (slug_topicname, countryiso)
+    indicator_names = set()
+    for indicator_name_long in indicator_names_dict.values():
+        ind0 = re.sub(r'\s+', ' ', indicator_name_long)
+        ind1, _, _ = ind0.partition(',')
+        ind2, _, _ = ind1.partition('(')
+        indicator_name, _, _ = ind2.partition(':')
+        indicator_names.add((indicator_name.strip()))
     resourcedata = {
         'name': resource_name % (topicname, countryname),
-        'description': 'HXLated csv containing %s indicators' % topicname,
+        'description': 'HXLated csv containing %s indicators\n\nIndicators: %s' % (topicname, ', '.join(sorted(indicator_names)))
     }
     dataset.generate_resource_from_rows(folder, filename, rows, resourcedata, headers=headers)
 
