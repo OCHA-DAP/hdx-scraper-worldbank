@@ -12,7 +12,7 @@ from hdx.utilities.downloader import Download
 from hdx.utilities.path import temp_dir, progress_storing_tempdir
 
 from worldbank import get_countries, get_topics, generate_all_datasets_showcases
-from worldbank import generate_topline_dataset, generate_resource_view
+from worldbank import generate_topline_dataset
 
 from hdx.facades.simple import facade
 
@@ -23,10 +23,8 @@ lookup = 'hdx-scraper-worldbank'
 
 def create_dataset_showcase(dataset, showcase, qc_indicators):
     dataset.update_from_yaml()
+    dataset.generate_resource_view(0, indicators=qc_indicators)
     dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False, updated_by_script='HDX Scraper: World Bank')
-    resource_view = generate_resource_view(dataset, qc_indicators)
-    if resource_view:
-        resource_view.create_in_hdx()
     showcase.create_in_hdx()
     showcase.add_dataset(dataset)
 

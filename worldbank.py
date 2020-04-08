@@ -7,7 +7,6 @@ World Bank:
 Generates World Bank datasets.
 
 """
-import json
 import logging
 
 import re
@@ -15,13 +14,11 @@ from collections import OrderedDict
 
 from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
-from hdx.data.resource_view import ResourceView
 from hdx.data.showcase import Showcase
 from hdx.utilities.dictandlist import dict_of_lists_add
 from slugify import slugify
 
 logger = logging.getLogger(__name__)
-quickchart_resourceno = 0
 headers = ['Country Name', 'Country ISO3', 'Year', 'Indicator Name', 'Indicator Code', 'Value']
 hxlrow = {'Country Name': '#country+name', 'Country ISO3': '#country+code', 'Year': '#date+year',
           'Indicator Name': '#indicator+name', 'Indicator Code': '#indicator+code', 'Value': '#indicator+value+num'}
@@ -223,11 +220,11 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
                 continue
             indicator_name = indicator_names_dict[indicator_code]
             if qc_indicators[0] is None:
-                qc_indicators[0] = {'code': indicator_code, 'name': indicator_name}
+                qc_indicators[0] = {'code': indicator_code, 'title': indicator_name, 'unit': get_unit(indicator_name)}
             elif qc_indicators[1] is None:
-                qc_indicators[1] = {'code': indicator_code, 'name': indicator_name}
+                qc_indicators[1] = {'code': indicator_code, 'title': indicator_name, 'unit': get_unit(indicator_name)}
             elif qc_indicators[2] is None:
-                qc_indicators[2] = {'code': indicator_code, 'name': indicator_name}
+                qc_indicators[2] = {'code': indicator_code, 'title': indicator_name, 'unit': get_unit(indicator_name)}
 
     rows.insert(0, hxlrow)
     slug_topicname = slugify(topicname)
@@ -246,7 +243,6 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
     dataset.generate_resource_from_rows(folder, filename, rows, resourcedata, headers=headers)
 
     years = dataset.set_dataset_year_range(years)
-    dataset.set_quickchart_resource(quickchart_resourceno)
 
     showcase = Showcase({
         'name': '%s-showcase' % slugified_name,
@@ -412,34 +408,3 @@ def generate_topline_dataset(base_url, downloader, folder, countries, topline_in
     }
     dataset.generate_resource_from_rows(folder, 'worldbank_topline.csv', rows, resourcedata, headers=headers)
     return dataset
-
-
-def generate_resource_view(dataset, indicators):
-    resourceview = ResourceView({'resource_id': dataset.get_resource(quickchart_resourceno)['id']})
-    resourceview.update_from_yaml()
-    hxl_preview_config = resourceview['hxl_preview_config']
-    if indicators[0] is not None:
-        hxl_preview_config = hxl_preview_config.replace('SP.POP.TOTL', indicators[0]['code'])
-        hxl_preview_config = hxl_preview_config.replace('Total Population', indicators[0]['name'])
-        hxl_preview_config = hxl_preview_config.replace('People', get_unit(indicators[0]['name']))
-        if indicators[1] is not None:
-            hxl_preview_config = hxl_preview_config.replace('SP.DYN.LE00.IN', indicators[1]['code'])
-            hxl_preview_config = hxl_preview_config.replace('Life Expectancy at Birth', indicators[1]['name'])
-            hxl_preview_config = hxl_preview_config.replace('Years', get_unit(indicators[1]['name']))
-            if indicators[2] is not None:
-                hxl_preview_config = hxl_preview_config.replace('SE.PRM.ENRR', indicators[2]['code'])
-                hxl_preview_config = hxl_preview_config.replace('Primary School Enrollment', indicators[2]['name'])
-                hxl_preview_config = hxl_preview_config.replace('Gross Percentage', get_unit(indicators[2]['name']))
-            else:
-                hxl_preview_config = json.loads(hxl_preview_config)
-                del hxl_preview_config['bites'][2]
-                hxl_preview_config = json.dumps(hxl_preview_config)
-        else:
-            hxl_preview_config = json.loads(hxl_preview_config)
-            del hxl_preview_config['bites'][2]
-            del hxl_preview_config['bites'][1]
-            hxl_preview_config = json.dumps(hxl_preview_config)
-        resourceview['hxl_preview_config'] = hxl_preview_config
-    else:
-        resourceview = None
-    return resourceview
