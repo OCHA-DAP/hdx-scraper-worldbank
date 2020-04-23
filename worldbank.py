@@ -26,6 +26,14 @@ resource_name = '%s Indicators for %s'
 
 
 def get_topics(base_url, downloader):
+    # look for indicators with special licence that should be excluded for now
+    url = '%sv2/en/sources/2/metatypes/license_url/search/iea.org?format=json&per_page=10000' % base_url
+    response = downloader.download(url)
+    json = response.json()
+    series = json['source'][0]['concept'][0]['variable']
+    indicators_to_exclude = [row['id'] for row in series]
+    logger.info('Excluded indicators that do not have a cc-by licence: %s', ', '.join(indicators_to_exclude))
+
     url = '%sv2/en/source?format=json&per_page=10000' % base_url
     response = downloader.download(url)
     json = response.json()
@@ -58,6 +66,8 @@ def get_topics(base_url, downloader):
         for indicator in json[1]:
             source_id = indicator['source']['id']
             if source_id not in valid_sources:
+                continue
+            if indicator['id'] in indicators_to_exclude:
                 continue
             dict_of_lists_add(sources, indicator['source']['id'], indicator)
         topic['sources'] = sources

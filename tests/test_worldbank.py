@@ -4,11 +4,9 @@
 Unit tests for worldbank.
 
 """
-import copy
 from os.path import join
 
 import pytest
-from hdx.data.dataset import Dataset
 from hdx.data.vocabulary import Vocabulary
 from hdx.hdx_configuration import Configuration
 from hdx.hdx_locations import Locations
@@ -25,6 +23,7 @@ class TestWorldBank:
     country = {'name': 'Afghanistan', 'iso3': 'AFG', 'iso2': 'AF'}
     madeupcountry = {'name': 'XCountry', 'iso3': 'XYZ', 'iso2': 'XY'}
 
+    indicators_to_ignore = {'page': 1, 'pages': 1, 'per_page': '1000', 'total': 41, 'source': [{'id': '2', 'concept': [{'id': 'Series', 'variable': [{'id': 'IGNORE.ME', 'metatype': [{'id': 'License_URL', 'value': 'http: //www.iea.org/t&c/termsandconditions'}]}]}]}]}
     sources = [{'id': '2', 'lastupdated': '2019-09-27', 'name': 'World Development Indicators', 'code': 'WDI', 'description': '', 'url': '', 'dataavailability': 'Y', 'metadataavailability': 'Y', 'concepts': '3'},
                {'id': '57', 'lastupdated': '2019-05-01', 'name': 'WDI Database Archives', 'code': 'WDA', 'description': '', 'url': '', 'dataavailability': 'Y', 'metadataavailability': 'Y', 'concepts': '4'},
                {'id': '62', 'lastupdated': '2017-05-09', 'name': 'International Comparison Program (ICP) 2011', 'code': 'ICP', 'description': '', 'url': '', 'dataavailability': 'N', 'metadataavailability': 'Y', 'concepts': '4'}]
@@ -35,7 +34,8 @@ class TestWorldBank:
     poverty = [{'id': 'SI.POV.GAPS', 'name': 'Poverty gap at $1.90 a day (2011 PPP) (%)', 'unit': '', 'source': {'id': '2', 'value': 'World Development Indicators'}, 'sourceNote': 'Poverty gap at $1.90 a day (2011 PPP)..', 'sourceOrganization': 'World Bank, Development Research Group.', 'topics': [{'id': '11','value': 'Poverty '}]}]
     health = [{'id': 'SP.POP.TOTL', 'name': 'Population, total', 'unit': '', 'source': {'id': '2', 'value': 'World Development Indicators'}, 'sourceNote': 'Total population is based on the de facto definition of population..', 'sourceOrganization': '(1) United Nations Population Division. World Population Prospects: 2019 Revision...', 'topics': [{'id': '11', 'value': 'Climate Change'}, {'id': '8', 'value': 'Health '}]}]
     population = [{'id': 'SP2.POP.TOTL', 'name': 'Population2, total', 'unit': '', 'source': {'id': '2', 'value': 'World Development Indicators'}, 'sourceNote': 'Total population is based on the de facto definition of population..', 'sourceOrganization': '(1) United Nations Population Division. World Population Prospects: 2019 Revision...', 'topics': [{'id': '11', 'value': 'Climate Change'}, {'id': '8', 'value': 'Health '}]}]
-    economics = [{'id': 'XX.YYY.ZZZZ', 'name': 'Economics', 'unit': '', 'source': {'id': '5', 'value': 'Something'}, 'sourceNote': 'Something..', 'sourceOrganization': 'Someone...', 'topics': [{'id': '99', 'value': 'Economics'}]}]
+    economics = [{'id': 'XX.YYY.ZZZZ', 'name': 'Economics', 'unit': '', 'source': {'id': '5', 'value': 'Something'}, 'sourceNote': 'Something..', 'sourceOrganization': 'Someone...', 'topics': [{'id': '99', 'value': 'Economics'}]},
+                 {'id': 'IGNORE.ME', 'name': 'Economics', 'unit': '', 'source': {'id': '2', 'value': 'Something'}, 'sourceNote': 'Something..', 'sourceOrganization': 'Someone...', 'topics': [{'id': '99', 'value': 'Economics'}]}]
     topics = [{'id': '17', 'value': 'Gender and Science', 'sourceNote': 'Gender equality is a core development objective...', 'tags': ['gender', 'science'], 'sources': {'2': gender}},
               {'id': '11', 'value': 'Poverty', 'sourceNote': 'For countries with an active poverty monitoring program...', 'tags': ['poverty'], 'sources': {'2': poverty}},
               {'id': '8', 'value': 'Health', 'sourceNote': 'Improving health is central to the Millennium Development Goals...', 'tags': ['health'], 'sources': {'2': health}},
@@ -111,7 +111,11 @@ class TestWorldBank:
             @staticmethod
             def download(url):
                 response = Response()
-                if url == 'http://lala/v2/en/source?format=json&per_page=10000':
+                if url == 'http://lala/v2/en/sources/2/metatypes/license_url/search/iea.org?format=json&per_page=10000':
+                    def fn():
+                        return TestWorldBank.indicators_to_ignore
+                    response.json = fn
+                elif url == 'http://lala/v2/en/source?format=json&per_page=10000':
                     def fn():
                         return [None, TestWorldBank.sources]
                     response.json = fn
