@@ -58,15 +58,17 @@ class TestWorldBank:
                      {'code': 'SH.MMR.RISK', 'title': 'Lifetime risk of maternal death (1 in:  rate varies by country)', 'unit': '1 in:  rate varies by country'}]
     dataset = {'name': 'world-bank-gender-and-science-indicators-for-afghanistan',
                'title': 'Afghanistan - Gender and Science', 'maintainer': '196196be-6037-4488-8b71-d786adf4c081',
-               'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '365',
+               'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '30',
                'tags': [{'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
                'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/). There is also a [consolidated country dataset](https://test-data.humdata.org/dataset/world-bank-combined-indicators-for-afghanistan) on HDX.\n\nGender equality is a core development objective...",
                'dataset_date': '01/01/2016-12/31/2017'}
-    resource = {'name': 'Gender and Science Indicators for Afghanistan', 'description': 'HXLated csv containing Gender and Science indicators\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio',
-                'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'}
+    resources = [{'name': 'Gender and Science Indicators for Afghanistan', 'description': 'HXLated csv containing Gender and Science indicators\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio',
+                'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'},
+                 {'name': 'QuickCharts-Gender and Science Indicators for Afghanistan', 'description': 'Cut down data for QuickCharts',
+                   'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'}]
     indicatorsp = [{'page': 1, 'pages': 1, 'per_page': 10000, 'total': 0, 'sourceid': None, 'lastupdated': '2019-10-02'},
                    [{'indicator': {'id': 'SI.POV.GAPS', 'value': 'Poverty gap at $1.90 a day (2011 PPP) (%)'}, 'country': {'id': 'AW','value': 'Aruba'}, 'countryiso3code': 'ABW', 'date': '2019', 'value': None, 'unit': '', 'obs_status': '', 'decimal': 1}]]
     indicatorsh = [{'page': 1, 'pages': 1, 'per_page': 10000, 'total': 10, 'sourceid': None, 'lastupdated': '2019-10-02'},
@@ -225,9 +227,13 @@ class TestWorldBank:
             dataset, showcase, qc_indicators, years, rows = \
                 generate_dataset_and_showcase(configuration, downloader, folder, TestWorldBank.country, topic)
             assert dataset == TestWorldBank.dataset
-            resource = dataset.get_resource()
-            assert resource == TestWorldBank.resource
+            resource = dataset.get_resources()
+            assert resource == TestWorldBank.resources
             filename = '%s_%s.csv' % (slugify(topic['value']), TestWorldBank.country['iso3'])
+            expected_file = join('tests', 'fixtures', filename)
+            actual_file = join(folder, filename)
+            assert_files_same(expected_file, actual_file)
+            filename = 'qc_%s_%s.csv' % (slugify(topic['value']), TestWorldBank.country['iso3'])
             expected_file = join('tests', 'fixtures', filename)
             actual_file = join(folder, filename)
             assert_files_same(expected_file, actual_file)
@@ -251,7 +257,7 @@ class TestWorldBank:
             configuration['character_limit'] = 25
             configuration['indicator_subtract'] = 2
             dataset, _, _, _, _ = generate_dataset_and_showcase(configuration, downloader, folder,
-                                                                   TestWorldBank.country, topic)
+                                                                TestWorldBank.country, topic)
             filename = '%s_%s.csv' % (slugify(topic['value']), TestWorldBank.country['iso3'])
             expected_file = join('tests', 'fixtures', 'split_%s' % filename)
             actual_file = join(folder, filename)
@@ -264,38 +270,45 @@ class TestWorldBank:
         assert bites_disabled is None
 
     def test_generate_all_datasets_showcases(self, configuration, downloader):
-        def create_dataset_showcase(dataset, showcase, qc_indicators):
+        def create_dataset_showcase(dataset, showcase, qc_indicators, batch):
             pass
         with temp_dir('worldbank') as folder:
-            dataset, showcase, bites_disabled = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
-                                                                                TestWorldBank.topics[:4], create_dataset_showcase)
+            dataset, showcase, bites_disabled = \
+                generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
+                                                TestWorldBank.topics[:4], create_dataset_showcase, '1234')
             assert dataset == {'name': 'world-bank-combined-indicators-for-afghanistan', 'title': 'Afghanistan - Economic, Social, Environmental, Health, Education, Development and Energy',
-                               'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '365', 'dataset_date': '01/01/2016-12/31/2018',
+                               'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '01/01/2016-12/31/2018',
                                'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'health', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
                                'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the following topics which also exist as individual datasets on HDX: [Gender and Science](https://test-data.humdata.org/dataset/world-bank-gender-and-science-indicators-for-afghanistan), [Health](https://test-data.humdata.org/dataset/world-bank-health-indicators-for-afghanistan)."}
             resources = dataset.get_resources()
             assert resources == [{'name': 'Combined Indicators for Afghanistan', 'description': 'HXLated csv containing Economic, Social, Environmental, Health, Education, Development and Energy indicators',
                                   'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'},
-                                 {'name': 'QuickCharts Combined Indicators for Afghanistan', 'description': 'QuickCharts resource',
+                                 {'name': 'QuickCharts-Combined Indicators for Afghanistan', 'description': 'Cut down data for QuickCharts',
                                   'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'}]
             filename = 'indicators_%s.csv' % TestWorldBank.country['iso3']
             expected_file = join('tests', 'fixtures', filename)
             actual_file = join(folder, filename)
             assert_files_same(expected_file, actual_file)
+            filename = 'qc_%s' % filename
+            expected_file = join('tests', 'fixtures', filename)
+            actual_file = join(folder, filename)
+            assert_files_same(expected_file, actual_file)
+
             assert showcase == {'name': 'world-bank-combined-indicators-for-afghanistan-showcase', 'title': 'Indicators for Afghanistan',
                                 'notes': 'Economic, Social, Environmental, Health, Education, Development and Energy indicators for Afghanistan',
                                 'url': 'https://data.worldbank.org/?locations=AF', 'image_url': 'https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg',
                                 'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'health', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
             assert bites_disabled == [False, True, True]
-            dataset, showcase, bites_disabled = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
-                                                                                [TestWorldBank.topics[1]], create_dataset_showcase)
+            dataset, showcase, bites_disabled = \
+                generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
+                                                [TestWorldBank.topics[1]], create_dataset_showcase, '1234')
             assert dataset is None
             assert showcase is None
             assert bites_disabled is None
 
             with pytest.raises(ValueError):
                 _ = generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
-                                                    TestWorldBank.topics, create_dataset_showcase)
+                                                    TestWorldBank.topics, create_dataset_showcase, '1234')
 
     def test_generate_topline_dataset(self, configuration, downloader):
         with temp_dir('worldbank') as folder:
@@ -304,7 +317,7 @@ class TestWorldBank:
             dataset = generate_topline_dataset(configuration['base_url'], downloader, folder, countries, topline_indicators)
             assert dataset == {'name': 'world-bank-country-topline-indicators', 'title': 'Topline Indicators',
                                'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx', 'subnational': '0',
-                               'groups': [{'name': 'afg'}], 'data_update_frequency': '365', 'dataset_date': '01/01/2018-12/31/2018',
+                               'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '01/01/2018-12/31/2018',
                                'tags': [{'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
             filename = 'worldbank_topline.csv'
             expected_file = join('tests', 'fixtures', filename)

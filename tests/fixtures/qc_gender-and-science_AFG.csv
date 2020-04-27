@@ -1,0 +1,8 @@
+Country ISO3,Year,Indicator Code,Value
+#country+code,#date+year,#indicator+code,#indicator+value+num
+AFG,2017,SH.STA.MMRT,638
+AFG,2016,SH.STA.MMRT,673
+AFG,2017,SP.ADO.TFRT,68.957
+AFG,2016,SP.ADO.TFRT,75.325
+AFG,2017,SH.MMR.RISK,33
+AFG,2016,SH.MMR.RISK,30

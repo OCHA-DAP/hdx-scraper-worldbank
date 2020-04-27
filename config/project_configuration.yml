@@ -11,6 +11,16 @@ tag_mappings:
   science: "economics"
   millenium development goals: "millennium development goals - mdg"
   external debt: "economics"
+combined_qc_indicators:
+  - code: "SP.POP.TOTL"
+    title: "Total Population"
+    unit: "People"
+  - code: "SP.DYN.LE00.IN"
+    title: "Life Expectancy at Birth"
+    unit: "Years"
+  - code: "SE.PRM.ENRR"
+    title: "Primary School Enrollment"
+    unit: "Gross Percentage"
 topline_indicators:
   - "SP.POP.TOTL"
   - "EN.POP.DNST"
