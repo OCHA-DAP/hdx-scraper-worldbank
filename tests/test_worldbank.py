@@ -88,7 +88,7 @@ class TestWorldBank:
 
     @pytest.fixture(scope='function')
     def configuration(self):
-        Configuration._create(hdx_read_only=True, user_agent='test',
+        Configuration._create(hdx_read_only=True, hdx_site='feature', user_agent='test',
                               project_config_yaml=join('tests', 'config', 'project_configuration.yml'))
         Locations.set_validlocations([{'name': 'afg', 'title': 'Afghanistan'}])
         Country.countriesdata(False)
