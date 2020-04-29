@@ -63,7 +63,7 @@ class TestWorldBank:
                         {'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
-               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/). There is also a [consolidated country dataset](https://test-data.humdata.org/dataset/world-bank-combined-indicators-for-afghanistan) on HDX.\n\nGender equality is a core development objective...",
+               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/). There is also a [consolidated country dataset](https://feature.data-humdata-org.ahconu.org/dataset/world-bank-combined-indicators-for-afghanistan) on HDX.\n\nGender equality is a core development objective...",
                'dataset_date': '01/01/2016-12/31/2017'}
     resources = [{'name': 'Gender and Science Indicators for Afghanistan', 'description': 'HXLated csv containing Gender and Science indicators\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio',
                 'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'},
@@ -88,7 +88,7 @@ class TestWorldBank:
 
     @pytest.fixture(scope='function')
     def configuration(self):
-        Configuration._create(hdx_read_only=True, hdx_site='test', user_agent='test',
+        Configuration._create(hdx_read_only=True, user_agent='test',
                               project_config_yaml=join('tests', 'config', 'project_configuration.yml'))
         Locations.set_validlocations([{'name': 'afg', 'title': 'Afghanistan'}])
         Country.countriesdata(False)
@@ -279,7 +279,7 @@ class TestWorldBank:
             assert dataset == {'name': 'world-bank-combined-indicators-for-afghanistan', 'title': 'Afghanistan - Economic, Social, Environmental, Health, Education, Development and Energy',
                                'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': 'hdx', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '01/01/2016-12/31/2018',
                                'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'health', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
-                               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the following topics which also exist as individual datasets on HDX: [Gender and Science](https://test-data.humdata.org/dataset/world-bank-gender-and-science-indicators-for-afghanistan), [Health](https://test-data.humdata.org/dataset/world-bank-health-indicators-for-afghanistan)."}
+                               'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the following topics which also exist as individual datasets on HDX: [Gender and Science](https://feature.data-humdata-org.ahconu.org/dataset/world-bank-gender-and-science-indicators-for-afghanistan), [Health](https://feature.data-humdata-org.ahconu.org/dataset/world-bank-health-indicators-for-afghanistan)."}
             resources = dataset.get_resources()
             assert resources == [{'name': 'Combined Indicators for Afghanistan', 'description': 'HXLated csv containing Economic, Social, Environmental, Health, Education, Development and Energy indicators',
                                   'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'},
