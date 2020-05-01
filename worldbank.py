@@ -258,8 +258,8 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
         'description': 'HXLated csv containing %s indicators\n\nIndicators: %s' % (topicname, ', '.join(sorted(indicator_names)))
     }
     values = [x['code'] for x in qc_indicators if x]
-    quickcharts = {'hashtag': '#indicator+code', 'values': values, 'cutdown': 2,
-                   'cutdownhashtags': ['#indicator+code', '#country+code', '#date+year', '#indicator+value+num']}
+    quickcharts = {'hashtag': '#indicator+code', 'values': values, 'numeric_hashtag': '#indicator+value+num',
+                   'cutdown': 2, 'cutdownhashtags': ['#indicator+code', '#country+code', '#date+year']}
     success, result = dataset.generate_resource_from_iterator(headers, rows, hxltags, folder, filename, resourcedata, quickcharts=quickcharts)
     if success is False:
         logger.warning('%s has no data!' % title)
@@ -307,8 +307,8 @@ def generate_combined_dataset_and_showcase(configuration, folder, country, tags,
         'description': 'HXLated csv containing %s indicators' % indicators,
     }
     values = [x['code'] for x in configuration['combined_qc_indicators']]
-    quickcharts = {'hashtag': '#indicator+code', 'values': values, 'cutdown': 2,
-                   'cutdownhashtags': ['#indicator+code', '#country+code', '#date+year', '#indicator+value+num']}
+    quickcharts = {'hashtag': '#indicator+code', 'values': values, 'numeric_hashtag': '#indicator+value+num',
+                   'cutdown': 2, 'cutdownhashtags': ['#indicator+code', '#country+code', '#date+year']}
     success, results = dataset.generate_resource_from_iterator(headers, rows, hxltags, folder, filename, resourcedata, quickcharts=quickcharts)
     if success is False:
         logger.warning('%s has no data!' % title)
