@@ -136,7 +136,7 @@ def get_dataset(slugified_name, title, countryiso=None):
         'title': title,
     })
     dataset.set_maintainer('196196be-6037-4488-8b71-d786adf4c081')
-    dataset.set_organization('hdx')
+    dataset.set_organization('905a9a49-5325-4a31-a9d7-147a60a8387c')
     dataset.set_subnational(False)
     dataset.set_expected_update_frequency('Every month')
     if countryiso:
