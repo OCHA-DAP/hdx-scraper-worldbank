@@ -57,7 +57,7 @@ class TestWorldBank:
                      {'code': 'SP.ADO.TFRT', 'title': 'Adolescent fertility rate (births per 1,000 women ages 15-19)', 'unit': 'births per 1,000 women ages 15-19'},
                      {'code': 'SH.MMR.RISK', 'title': 'Lifetime risk of maternal death (1 in:  rate varies by country)', 'unit': '1 in:  rate varies by country'}]
     dataset = {'name': 'world-bank-gender-and-science-indicators-for-afghanistan',
-               'title': 'Afghanistan - Gender and Science', 'maintainer': '196196be-6037-4488-8b71-d786adf4c081',
+               'title': 'Afghanistan - Gender and Science', 'maintainer': '085d3bd8-9035-4b0e-9d2d-80e849dd7b07',
                'owner_org': '905a9a49-5325-4a31-a9d7-147a60a8387c', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '30',
                'tags': [{'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
@@ -277,7 +277,7 @@ class TestWorldBank:
                 generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
                                                 TestWorldBank.topics[:4], create_dataset_showcase, '1234')
             assert dataset == {'name': 'world-bank-combined-indicators-for-afghanistan', 'title': 'Afghanistan - Economic, Social, Environmental, Health, Education, Development and Energy',
-                               'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': '905a9a49-5325-4a31-a9d7-147a60a8387c', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '01/01/2016-12/31/2018',
+                               'maintainer': '085d3bd8-9035-4b0e-9d2d-80e849dd7b07', 'owner_org': '905a9a49-5325-4a31-a9d7-147a60a8387c', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '01/01/2016-12/31/2018',
                                'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'health', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
                                'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the following topics which also exist as individual datasets on HDX: [Gender and Science](https://feature.data-humdata-org.ahconu.org/dataset/world-bank-gender-and-science-indicators-for-afghanistan), [Health](https://feature.data-humdata-org.ahconu.org/dataset/world-bank-health-indicators-for-afghanistan)."}
             resources = dataset.get_resources()
@@ -316,7 +316,7 @@ class TestWorldBank:
             topline_indicators = configuration['topline_indicators']
             dataset = generate_topline_dataset(configuration['base_url'], downloader, folder, countries, topline_indicators)
             assert dataset == {'name': 'world-bank-country-topline-indicators', 'title': 'Topline Indicators',
-                               'maintainer': '196196be-6037-4488-8b71-d786adf4c081', 'owner_org': '905a9a49-5325-4a31-a9d7-147a60a8387c', 'subnational': '0',
+                               'maintainer': '085d3bd8-9035-4b0e-9d2d-80e849dd7b07', 'owner_org': '905a9a49-5325-4a31-a9d7-147a60a8387c', 'subnational': '0',
                                'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '01/01/2018-12/31/2018',
                                'tags': [{'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
             filename = 'worldbank_topline.csv'
