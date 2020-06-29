@@ -1,7 +1,7 @@
 # Collector specific configuration
 base_url: "http://api.worldbank.org/"
-indicator_limit: 16
-character_limit: 250
+indicator_limit: 60
+character_limit: 1500
 tag_mappings:
   financial sector: "economics"
   social protection: "socioeconomics"
