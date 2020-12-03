@@ -211,7 +211,7 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
             url = '%s%s?source=%s&format=json&per_page=10000' % (start_url, indicators_string, source_id)
             response = downloader.download(url)
             json = response.json()
-            if json[0]['total'] == 0:
+            if 'message' in json[0] or json[0]['total'] == 0:
                 i += indicator_limit
                 continue
             if json[0]['pages'] != 1:
