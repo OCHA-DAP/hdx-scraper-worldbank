@@ -64,7 +64,7 @@ class TestWorldBank:
                         {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'},
                         {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
                'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/). There is also a [consolidated country dataset](https://feature.data-humdata-org.ahconu.org/dataset/world-bank-combined-indicators-for-afghanistan) on HDX.\n\nGender equality is a core development objective...",
-               'dataset_date': '01/01/2016-12/31/2017'}
+               'dataset_date': '[2016-01-01T00:00:00 TO 2017-12-31T00:00:00]'}
     resources = [{'name': 'Gender and Science Indicators for Afghanistan', 'description': 'HXLated csv containing Gender and Science indicators\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio',
                 'format': 'csv', 'resource_type': 'file.upload', 'url_type': 'upload'},
                  {'name': 'QuickCharts-Gender and Science Indicators for Afghanistan', 'description': 'Cut down data for QuickCharts',
@@ -277,7 +277,7 @@ class TestWorldBank:
                 generate_all_datasets_showcases(configuration, downloader, folder, TestWorldBank.country,
                                                 TestWorldBank.topics[:4], create_dataset_showcase, '1234')
             assert dataset == {'name': 'world-bank-combined-indicators-for-afghanistan', 'title': 'Afghanistan - Economic, Social, Environmental, Health, Education, Development and Energy',
-                               'maintainer': '085d3bd8-9035-4b0e-9d2d-80e849dd7b07', 'owner_org': '905a9a49-5325-4a31-a9d7-147a60a8387c', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '01/01/2016-12/31/2018',
+                               'maintainer': '085d3bd8-9035-4b0e-9d2d-80e849dd7b07', 'owner_org': '905a9a49-5325-4a31-a9d7-147a60a8387c', 'subnational': '0', 'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '[2016-01-01T00:00:00 TO 2018-12-31T00:00:00]',
                                'tags': [{'name': 'economics', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'gender', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'health', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'hxl', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}, {'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
                                'notes': "Contains data from the World Bank's [data portal](http://data.worldbank.org/) covering the following topics which also exist as individual datasets on HDX: [Gender and Science](https://feature.data-humdata-org.ahconu.org/dataset/world-bank-gender-and-science-indicators-for-afghanistan), [Health](https://feature.data-humdata-org.ahconu.org/dataset/world-bank-health-indicators-for-afghanistan)."}
             resources = dataset.get_resources()
@@ -317,7 +317,7 @@ class TestWorldBank:
             dataset = generate_topline_dataset(configuration['base_url'], downloader, folder, countries, topline_indicators)
             assert dataset == {'name': 'world-bank-country-topline-indicators', 'title': 'Topline Indicators',
                                'maintainer': '085d3bd8-9035-4b0e-9d2d-80e849dd7b07', 'owner_org': '905a9a49-5325-4a31-a9d7-147a60a8387c', 'subnational': '0',
-                               'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '01/01/2018-12/31/2018',
+                               'groups': [{'name': 'afg'}], 'data_update_frequency': '30', 'dataset_date': '[2018-01-01T00:00:00 TO 2018-12-31T00:00:00]',
                                'tags': [{'name': 'indicators', 'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}]}
             filename = 'worldbank_topline.csv'
             expected_file = join('tests', 'fixtures', filename)

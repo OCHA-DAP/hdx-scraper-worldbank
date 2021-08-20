@@ -9,7 +9,7 @@ from os.path import join, expanduser
 
 from hdx.hdx_configuration import Configuration
 from hdx.utilities.downloader import Download
-from hdx.utilities.path import multiple_progress_storing_tempdir
+from hdx.utilities.path import wheretostart_tempdir_batch, progress_storing_folder
 
 from worldbank import get_countries, get_topics, generate_all_datasets_showcases
 from worldbank import generate_topline_dataset
@@ -33,24 +33,23 @@ def main():
     """Generate dataset and create it in HDX"""
 
     with Download(status_forcelist=[400, 429, 500, 502, 503, 504]) as downloader:
-        configuration = Configuration.read()
-        base_url = configuration['base_url']
-        combined_qc_indicators = configuration['combined_qc_indicators']
-        topics = get_topics(base_url, downloader)
-        toplines = [{'name': 'topline'}]
-        countries = get_countries(base_url, downloader)
-        logger.info('Number of countries: %d' % len(countries))
-        for i, info, nextdict in multiple_progress_storing_tempdir('WorldBank', [toplines, countries],
-                                                                   ['name', 'iso3']):
+        with wheretostart_tempdir_batch(lookup) as info:
             folder = info['folder']
             batch = info['batch']
-            if i == 0:
-                dataset = generate_topline_dataset(base_url, downloader, folder, countries,
-                                                   configuration['topline_indicators'])
-                logger.info('Adding topline indicators')
-                dataset.update_from_yaml(path=join('config', 'hdx_topline_dataset_static.yml'))
-                dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False, updated_by_script='HDX Scraper: WorldBank', batch=batch)
-            else:
+            configuration = Configuration.read()
+            base_url = configuration['base_url']
+            combined_qc_indicators = configuration['combined_qc_indicators']
+            topics = get_topics(base_url, downloader)
+            countries = get_countries(base_url, downloader)
+            logger.info('Number of countries: %d' % len(countries))
+
+            dataset = generate_topline_dataset(base_url, downloader, folder, countries,
+                                               configuration['topline_indicators'])
+            logger.info('Adding topline indicators')
+            dataset.update_from_yaml(path=join('config', 'hdx_topline_dataset_static.yml'))
+            dataset.create_in_hdx(remove_additional_resources=True, hxl_update=False,
+                                  updated_by_script='HDX Scraper: WorldBank', batch=batch)
+            for info, nextdict in progress_storing_folder(info, countries, 'iso3'):
                 dataset, showcase, bites_disabled = \
                     generate_all_datasets_showcases(configuration, downloader, folder, nextdict, topics, create_dataset_showcase, batch)
                 if dataset is not None:
