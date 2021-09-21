@@ -1,4 +1,4 @@
-FROM unocha/hdx-scraper-baseimage:stable
+FROM public.ecr.aws/unocha/hdx-scraper-baseimage:stable
 
 WORKDIR /srv
 
