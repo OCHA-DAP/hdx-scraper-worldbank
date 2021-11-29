@@ -1,1 +1,1 @@
-# World Bank has no additional requirements to the base image
+retry2==0.9.3

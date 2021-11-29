@@ -7,9 +7,10 @@ import logging
 from os.path import expanduser, join
 
 from hdx.facades.simple import facade
-from hdx.hdx_configuration import Configuration
-from hdx.utilities.downloader import Download
+from hdx.api.configuration import Configuration
+from hdx.utilities.downloader import Download, DownloadError
 from hdx.utilities.path import progress_storing_folder, wheretostart_tempdir_batch
+from retry import retry
 
 from worldbank import (
     generate_all_datasets_showcases,
@@ -67,7 +68,9 @@ def main():
                 updated_by_script="HDX Scraper: WorldBank",
                 batch=batch,
             )
-            for info, nextdict in progress_storing_folder(info, countries, "iso3"):
+
+            @retry(DownloadError, tries=5, delay=3600)
+            def process_country(nextdict):
                 dataset, showcase, bites_disabled = generate_all_datasets_showcases(
                     configuration,
                     downloader,
@@ -92,6 +95,9 @@ def main():
                     )
                     showcase.create_in_hdx()
                     showcase.add_dataset(dataset)
+
+            for _, nextdict in progress_storing_folder(info, countries, "iso3"):
+                process_country(nextdict)
 
 
 if __name__ == "__main__":
