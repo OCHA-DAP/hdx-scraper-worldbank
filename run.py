@@ -6,12 +6,18 @@ Top level script. Calls other functions that generate datasets that this script 
 import logging
 from os.path import expanduser, join
 
-from hdx.facades.simple import facade
 from hdx.api.configuration import Configuration
+from hdx.data.hdxobject import HDXError
+from hdx.facades.simple import facade
 from hdx.utilities.downloader import Download, DownloadError
 from hdx.utilities.path import progress_storing_folder, wheretostart_tempdir_batch
-from retry import retry
-
+from tenacity import (
+    after_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_fixed,
+)
 from worldbank import (
     generate_all_datasets_showcases,
     generate_topline_dataset,
@@ -69,7 +75,15 @@ def main():
                 batch=batch,
             )
 
-            @retry(DownloadError, tries=5, delay=3600)
+            @retry(
+                retry=(
+                    retry_if_exception_type(DownloadError)
+                    | retry_if_exception_type(HDXError)
+                ),
+                stop=stop_after_attempt(5),
+                wait=wait_fixed(3600),
+                before=after_log(logger, logging.INFO),
+            )
             def process_country(nextdict):
                 dataset, showcase, bites_disabled = generate_all_datasets_showcases(
                     configuration,

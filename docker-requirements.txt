@@ -1,1 +1,1 @@
-retry2==0.9.3
+tenacity==8.2.2

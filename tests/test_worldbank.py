@@ -429,7 +429,7 @@ class TestWorldBank:
             },
         ],
         "notes": "Contains data from the World Bank's [data portal](http://data.worldbank.org/). There is also a [consolidated country dataset](https://feature.data-humdata-org.ahconu.org/dataset/world-bank-combined-indicators-for-afghanistan) on HDX.\n\nGender equality is a core development objective...",
-        "dataset_date": "[2016-01-01T00:00:00 TO 2017-12-31T00:00:00]",
+        "dataset_date": "[2016-01-01T00:00:00 TO 2017-12-31T23:59:59]",
     }
     resources = [
         {
@@ -1049,7 +1049,7 @@ class TestWorldBank:
                 "subnational": "0",
                 "groups": [{"name": "afg"}],
                 "data_update_frequency": "30",
-                "dataset_date": "[2016-01-01T00:00:00 TO 2018-12-31T00:00:00]",
+                "dataset_date": "[2016-01-01T00:00:00 TO 2018-12-31T23:59:59]",
                 "tags": [
                     {
                         "name": "economics",
@@ -1173,7 +1173,7 @@ class TestWorldBank:
                 "subnational": "0",
                 "groups": [{"name": "afg"}],
                 "data_update_frequency": "30",
-                "dataset_date": "[2018-01-01T00:00:00 TO 2018-12-31T00:00:00]",
+                "dataset_date": "[2018-01-01T00:00:00 TO 2018-12-31T23:59:59]",
                 "tags": [
                     {
                         "name": "indicators",

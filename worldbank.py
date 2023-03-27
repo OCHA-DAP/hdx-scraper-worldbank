@@ -319,7 +319,7 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
     if success is False:
         logger.warning(f"{title} has no data!")
         return None, None, None
-    years = dataset.set_dataset_year_range(years)
+    years = dataset.set_reference_period_year_range(years)
 
     showcase = Showcase(
         {
@@ -386,7 +386,7 @@ def generate_combined_dataset_and_showcase(
         logger.warning(f"{title} has no data!")
         return None, None, None
 
-    dataset.set_dataset_year_range(allyears)
+    dataset.set_reference_period_year_range(allyears)
 
     showcase = Showcase(
         {
@@ -489,7 +489,7 @@ def generate_topline_dataset(
         }
         rows.append(topline_indicator)
 
-    dataset.set_dataset_year_range(years)
+    dataset.set_reference_period_year_range(years)
     dataset.add_tags(["indicators"])
 
     resourcedata = {
