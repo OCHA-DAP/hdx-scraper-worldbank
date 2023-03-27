@@ -82,7 +82,7 @@ def main():
                 ),
                 stop=stop_after_attempt(5),
                 wait=wait_fixed(3600),
-                before=after_log(logger, logging.INFO),
+                after=after_log(logger, logging.INFO),
             )
             def process_country(nextdict):
                 dataset, showcase, bites_disabled = generate_all_datasets_showcases(
