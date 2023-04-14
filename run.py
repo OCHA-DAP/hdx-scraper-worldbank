@@ -32,7 +32,7 @@ lookup = "hdx-scraper-worldbank"
 
 def create_dataset_showcase(dataset, showcase, qc_indicators, batch):
     dataset.update_from_yaml()
-    dataset.generate_resource_view(-1, indicators=qc_indicators)
+    dataset.generate_quickcharts(-1, indicators=qc_indicators)
     dataset.create_in_hdx(
         remove_additional_resources=True,
         hxl_update=False,
