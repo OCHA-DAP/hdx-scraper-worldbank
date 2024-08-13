@@ -645,17 +645,11 @@ class TestWorldBank:
         )
         Locations.set_validlocations([{"name": "afg", "title": "Afghanistan"}])
         Country.countriesdata(False)
-        Vocabulary._tags_dict = True
+        tags = ("hxl", "gender", "economics", "poverty", "health", "population", "indicators")
+        Vocabulary._tags_dict = {tag: {"Action to Take": "ok"} for tag in tags}
+        tags = [{"name": tag} for tag in tags]
         Vocabulary._approved_vocabulary = {
-            "tags": [
-                {"name": "hxl"},
-                {"name": "gender"},
-                {"name": "economics"},
-                {"name": "poverty"},
-                {"name": "health"},
-                {"name": "population"},
-                {"name": "indicators"},
-            ],
+            "tags": tags,
             "id": "4e61d464-4943-4e97-973a-84673c1aaa87",
             "name": "approved",
         }

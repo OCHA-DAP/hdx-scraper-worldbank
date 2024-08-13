@@ -313,13 +313,13 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
         "cutdown": 2,
         "cutdownhashtags": ["#indicator+code", "#country+code", "#date+year"],
     }
-    success, result = dataset.generate_resource_from_iterator(
+    success, result = dataset.generate_resource_from_iterable(
         headers, rows, hxltags, folder, filename, resourcedata, quickcharts=quickcharts
     )
     if success is False:
         logger.warning(f"{title} has no data!")
         return None, None, None
-    years = dataset.set_reference_period_year_range(years)
+    years = dataset.set_time_period_year_range(years)
 
     showcase = Showcase(
         {
@@ -379,14 +379,14 @@ def generate_combined_dataset_and_showcase(
         "cutdown": 2,
         "cutdownhashtags": ["#indicator+code", "#country+code", "#date+year"],
     }
-    success, results = dataset.generate_resource_from_iterator(
+    success, results = dataset.generate_resource_from_iterable(
         headers, rows, hxltags, folder, filename, resourcedata, quickcharts=quickcharts
     )
     if success is False:
         logger.warning(f"{title} has no data!")
         return None, None, None
 
-    dataset.set_reference_period_year_range(allyears)
+    dataset.set_time_period_year_range(allyears)
 
     showcase = Showcase(
         {
@@ -489,7 +489,7 @@ def generate_topline_dataset(
         }
         rows.append(topline_indicator)
 
-    dataset.set_reference_period_year_range(years)
+    dataset.set_time_period_year_range(years)
     dataset.add_tags(["indicators"])
 
     resourcedata = {
