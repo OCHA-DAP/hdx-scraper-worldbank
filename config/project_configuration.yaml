@@ -1,6 +1,6 @@
 # Collector specific configuration
 base_url: "https://api.worldbank.org/"
-indicator_limit: 60
+indicator_limit: 45
 character_limit: 1500
 tag_mappings:
   financial sector: "economics"
