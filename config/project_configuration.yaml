@@ -1,5 +1,5 @@
 # Collector specific configuration
-base_url: "http://api.worldbank.org/"
+base_url: "https://api.worldbank.org/"
 indicator_limit: 60
 character_limit: 1500
 tag_mappings:
