@@ -66,7 +66,7 @@ def main():
             )
             logger.info("Adding topline indicators")
             dataset.update_from_yaml(
-                path=join("config", "hdx_topline_dataset_static.yml")
+                path=join("config", "hdx_topline_dataset_static.yaml")
             )
             dataset.create_in_hdx(
                 remove_additional_resources=True,
