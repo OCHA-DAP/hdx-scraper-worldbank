@@ -1,0 +1,31 @@
+#########################
+# Project Configuration #
+#########################
+
+# Project name and version needed to run tests
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hdx-scraper-worldbank"
+requires-python = ">=3.13"
+dependencies = [
+  "hdx-python-api>= 6.4.6",
+  "hdx-python-country>= 3.9.6",
+  "hdx-python-utilities>= 3.9.0",
+  "tenacity>= 9.1.2",
+]
+
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "pytest-cov"
+]
+dev = ["pre-commit"]
+
+[project.scripts]
+run = "hdx.scraper.worldbank.__main__:main"

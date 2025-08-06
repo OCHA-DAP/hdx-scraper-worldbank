@@ -3,18 +3,19 @@
 Unit tests for worldbank.
 
 """
+
 from os.path import join
 
 import pytest
-from hdx.data.vocabulary import Vocabulary
 from hdx.api.configuration import Configuration
 from hdx.api.locations import Locations
+from hdx.data.vocabulary import Vocabulary
 from hdx.location.country import Country
 from hdx.utilities.compare import assert_files_same
 from hdx.utilities.path import temp_dir
 from slugify import slugify
 
-from worldbank import (
+from hdx.scraper.worldbank.pipeline import (
     generate_all_datasets_showcases,
     generate_combined_dataset_and_showcase,
     generate_dataset_and_showcase,
@@ -239,29 +240,32 @@ class TestWorldBank:
             "sources": {"2": population},
         },
     ]
-    countries = {
-        "id": "AFG",
-        "iso2Code": "AF",
-        "name": "Afghanistan",
-        "region": {"id": "SAS", "iso2code": "8S", "value": "South Asia"},
-        "adminregion": {"id": "SAS", "iso2code": "8S", "value": "South Asia"},
-        "incomeLevel": {"id": "LIC", "iso2code": "XM", "value": "Low income"},
-        "lendingType": {"id": "IDX", "iso2code": "XI", "value": "IDA"},
-        "capitalCity": "Kabul",
-        "longitude": "69.1761",
-        "latitude": "34.5228",
-    }, {
-        "id": "AFR",
-        "iso2Code": "A9",
-        "name": "Africa",
-        "region": {"id": "NA", "iso2code": "NA", "value": "Aggregates"},
-        "adminregion": {"id": "", "iso2code": "", "value": ""},
-        "incomeLevel": {"id": "NA", "iso2code": "NA", "value": "Aggregates"},
-        "lendingType": {"id": "", "iso2code": "", "value": "Aggregates"},
-        "capitalCity": "",
-        "longitude": "",
-        "latitude": "",
-    }
+    countries = (
+        {
+            "id": "AFG",
+            "iso2Code": "AF",
+            "name": "Afghanistan",
+            "region": {"id": "SAS", "iso2code": "8S", "value": "South Asia"},
+            "adminregion": {"id": "SAS", "iso2code": "8S", "value": "South Asia"},
+            "incomeLevel": {"id": "LIC", "iso2code": "XM", "value": "Low income"},
+            "lendingType": {"id": "IDX", "iso2code": "XI", "value": "IDA"},
+            "capitalCity": "Kabul",
+            "longitude": "69.1761",
+            "latitude": "34.5228",
+        },
+        {
+            "id": "AFR",
+            "iso2Code": "A9",
+            "name": "Africa",
+            "region": {"id": "NA", "iso2code": "NA", "value": "Aggregates"},
+            "adminregion": {"id": "", "iso2code": "", "value": ""},
+            "incomeLevel": {"id": "NA", "iso2code": "NA", "value": "Aggregates"},
+            "lendingType": {"id": "", "iso2code": "", "value": "Aggregates"},
+            "capitalCity": "",
+            "longitude": "",
+            "latitude": "",
+        },
+    )
     indicators = [
         {
             "page": 1,
@@ -645,7 +649,15 @@ class TestWorldBank:
         )
         Locations.set_validlocations([{"name": "afg", "title": "Afghanistan"}])
         Country.countriesdata(False)
-        tags = ("hxl", "gender", "economics", "poverty", "health", "population", "indicators")
+        tags = (
+            "hxl",
+            "gender",
+            "economics",
+            "poverty",
+            "health",
+            "population",
+            "indicators",
+        )
         Vocabulary._tags_dict = {tag: {"Action to Take": "ok"} for tag in tags}
         tags = [{"name": tag} for tag in tags]
         Vocabulary._approved_vocabulary = {
