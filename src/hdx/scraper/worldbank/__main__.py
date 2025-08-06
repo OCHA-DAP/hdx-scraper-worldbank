@@ -12,21 +12,23 @@ from hdx.data.hdxobject import HDXError
 from hdx.data.user import User
 from hdx.facades.simple import facade
 from hdx.utilities.downloader import Download, DownloadError
-from hdx.utilities.path import progress_storing_folder, wheretostart_tempdir_batch, \
-    script_dir_plus_file
+from hdx.utilities.path import (
+    progress_storing_folder,
+    script_dir_plus_file,
+    wheretostart_tempdir_batch,
+)
+from pipeline import (
+    generate_all_datasets_showcases,
+    generate_topline_dataset,
+    get_countries,
+    get_topics,
+)
 from tenacity import (
     after_log,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
     wait_fixed,
-)
-
-from pipeline import (
-    generate_all_datasets_showcases,
-    generate_topline_dataset,
-    get_countries,
-    get_topics,
 )
 
 from hdx.scraper.worldbank._version import __version__
@@ -39,9 +41,7 @@ _UPDATED_BY_SCRIPT = "HDX Scraper: WorldBank"
 
 def create_dataset_showcase(dataset, showcase, qc_indicators, batch):
     dataset.update_from_yaml(
-        script_dir_plus_file(
-            join("config", "hdx_dataset_static.yaml"), main
-        )
+        script_dir_plus_file(join("config", "hdx_dataset_static.yaml"), main)
     )
     dataset.generate_quickcharts(-1, indicators=qc_indicators)
     dataset.create_in_hdx(
