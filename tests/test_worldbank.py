@@ -708,7 +708,7 @@ class TestWorldBank:
                 response = Response()
                 if (
                     url
-                    == "http://lala/v2/en/sources/2/metatypes/license_url/search/iea.org?format=json&per_page=10000"
+                    == "http://lala/v2/en/sources/2/metatypes/source/search/iea?format=json&per_page=10000"
                 ):
 
                     def fn():

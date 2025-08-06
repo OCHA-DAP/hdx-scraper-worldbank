@@ -39,7 +39,7 @@ resource_name = "%s Indicators for %s"
 
 def get_topics(base_url, downloader):
     # look for indicators with special licence that should be excluded for now
-    url = f"{base_url}v2/en/sources/2/metatypes/license_url/search/iea.org?format=json&per_page=10000"
+    url = f"{base_url}v2/en/sources/2/metatypes/source/search/iea?format=json&per_page=10000"
     response = downloader.download(url)
     json = response.json()
     series = json["source"][0]["concept"][0]["variable"]
