@@ -17,12 +17,6 @@ from hdx.utilities.path import (
     script_dir_plus_file,
     wheretostart_tempdir_batch,
 )
-from pipeline import (
-    generate_all_datasets_showcases,
-    generate_topline_dataset,
-    get_countries,
-    get_topics,
-)
 from tenacity import (
     after_log,
     retry,
@@ -32,6 +26,12 @@ from tenacity import (
 )
 
 from hdx.scraper.worldbank._version import __version__
+from hdx.scraper.worldbank.pipeline import (
+    generate_all_datasets_showcases,
+    generate_topline_dataset,
+    get_countries,
+    get_topics,
+)
 
 logger = logging.getLogger(__name__)
 
