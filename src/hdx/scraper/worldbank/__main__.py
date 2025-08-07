@@ -59,7 +59,7 @@ def main():
 
     logger.info(f"##### {_LOOKUP} version {__version__} ####")
     configuration = Configuration.read()
-    User.check_current_user_write_access("707b1f6d-5595-453f-8da7-01770b76e178")
+    User.check_current_user_write_access("905a9a49-5325-4a31-a9d7-147a60a8387c")
 
     with Download(status_forcelist=[400, 429, 500, 502, 503, 504]) as downloader:
         with wheretostart_tempdir_batch(folder=_LOOKUP) as info:
