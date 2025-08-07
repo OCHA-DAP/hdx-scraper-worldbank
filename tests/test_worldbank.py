@@ -7,13 +7,13 @@ Unit tests for worldbank.
 from os.path import join
 
 import pytest
-from hdx.api.configuration import Configuration
-from hdx.api.locations import Locations
-from hdx.data.vocabulary import Vocabulary
-from hdx.location.country import Country
 from hdx.utilities.compare import assert_files_same
 from hdx.utilities.path import temp_dir
 from slugify import slugify
+
+from tests.countries_data import CountriesData
+from tests.other_data import OtherData
+from tests.topics_data import TopicsData
 
 from hdx.scraper.worldbank.pipeline import (
     generate_all_datasets_showcases,
@@ -27,391 +27,6 @@ from hdx.scraper.worldbank.pipeline import (
 
 
 class TestWorldBank:
-    country = {"name": "Afghanistan", "iso3": "AFG", "iso2": "AF"}
-    madeupcountry = {"name": "XCountry", "iso3": "XYZ", "iso2": "XY"}
-
-    indicators_to_ignore = {
-        "page": 1,
-        "pages": 1,
-        "per_page": "1000",
-        "total": 41,
-        "source": [
-            {
-                "id": "2",
-                "concept": [
-                    {
-                        "id": "Series",
-                        "variable": [
-                            {
-                                "id": "IGNORE.ME",
-                                "metatype": [
-                                    {
-                                        "id": "License_URL",
-                                        "value": "http: //www.iea.org/t&c/termsandconditions",
-                                    }
-                                ],
-                            }
-                        ],
-                    }
-                ],
-            }
-        ],
-    }
-    sources = [
-        {
-            "id": "2",
-            "lastupdated": "2019-09-27",
-            "name": "World Development Indicators",
-            "code": "WDI",
-            "description": "",
-            "url": "",
-            "dataavailability": "Y",
-            "metadataavailability": "Y",
-            "concepts": "3",
-        },
-        {
-            "id": "57",
-            "lastupdated": "2019-05-01",
-            "name": "WDI Database Archives",
-            "code": "WDA",
-            "description": "",
-            "url": "",
-            "dataavailability": "Y",
-            "metadataavailability": "Y",
-            "concepts": "4",
-        },
-        {
-            "id": "62",
-            "lastupdated": "2017-05-09",
-            "name": "International Comparison Program (ICP) 2011",
-            "code": "ICP",
-            "description": "",
-            "url": "",
-            "dataavailability": "N",
-            "metadataavailability": "Y",
-            "concepts": "4",
-        },
-    ]
-    gender = [
-        {
-            "id": "SH.STA.MMRT",
-            "name": "Maternal mortality ratio (modeled estimate, per 100, 000 live births)",
-            "unit": "",
-            "source": {"id": "2", "value": "World Development Indicators"},
-            "sourceNote": "Maternal mortality ratio is ...",
-            "sourceOrganization": "WHO, UNICEF, UNFPA, World Bank Group, and the United Nations Population Division. Trends in Maternal Mortality:  2000 to 2017. Geneva, World Health Organization, 2019",
-            "topics": [
-                {"id": "8", "value": "Health "},
-                {"id": "17", "value": "Gender"},
-                {"id": "2", "value": "Aid Effectiveness "},
-            ],
-        },
-        {
-            "id": "SG.LAW.CHMR",
-            "name": "Law prohibits or invalidates child or early marriage (1=yes; 0=no)",
-            "unit": "",
-            "source": {"id": "2", "value": "World Development Indicators"},
-            "sourceNote": "Law prohibits or invalidates...",
-            "sourceOrganization": "World Bank: Women, Business and the Law.",
-            "topics": [
-                {"id": "13", "value": "Public Sector "},
-                {"id": "17", "value": "Gender"},
-            ],
-        },
-        {
-            "id": "SP.ADO.TFRT",
-            "name": "Adolescent fertility rate (births per 1,000 women ages 15-19)",
-            "unit": "",
-            "source": {"id": "2", "value": "World Development Indicators"},
-            "sourceNote": "Adolescent fertility rate is...",
-            "sourceOrganization": "United Nations Population Division,  World Population Prospects.",
-            "topics": [
-                {"id": "8", "value": "Health "},
-                {"id": "17", "value": "Gender"},
-                {"id": "15", "value": "Social Development "},
-            ],
-        },
-        {
-            "id": "SH.MMR.RISK",
-            "name": "Lifetime risk of maternal death (1 in: rate varies by country)",
-            "unit": "",
-            "source": {"id": "2", "value": "World Development Indicators"},
-            "sourceNote": "Life time risk of maternal death is...",
-            "sourceOrganization": "WHO, UNICEF, UNFPA, World Bank Group, and the United Nations Population Division. Trends in Maternal Mortality:  2000 to 2017. Geneva, World Health Organization, 2019",
-            "topics": [
-                {"id": "8", "value": "Health "},
-                {"id": "17", "value": "Gender"},
-            ],
-        },
-    ]
-    poverty = [
-        {
-            "id": "SI.POV.GAPS",
-            "name": "Poverty gap at $1.90 a day (2011 PPP) (%)",
-            "unit": "",
-            "source": {"id": "2", "value": "World Development Indicators"},
-            "sourceNote": "Poverty gap at $1.90 a day (2011 PPP)..",
-            "sourceOrganization": "World Bank, Development Research Group.",
-            "topics": [{"id": "11", "value": "Poverty "}],
-        }
-    ]
-    health = [
-        {
-            "id": "SP.POP.TOTL",
-            "name": "Population, total",
-            "unit": "",
-            "source": {"id": "2", "value": "World Development Indicators"},
-            "sourceNote": "Total population is based on the de facto definition of population..",
-            "sourceOrganization": "(1) United Nations Population Division. World Population Prospects: 2019 Revision...",
-            "topics": [
-                {"id": "11", "value": "Climate Change"},
-                {"id": "8", "value": "Health "},
-            ],
-        }
-    ]
-    population = [
-        {
-            "id": "SP2.POP.TOTL",
-            "name": "Population2, total",
-            "unit": "",
-            "source": {"id": "2", "value": "World Development Indicators"},
-            "sourceNote": "Total population is based on the de facto definition of population..",
-            "sourceOrganization": "(1) United Nations Population Division. World Population Prospects: 2019 Revision...",
-            "topics": [
-                {"id": "11", "value": "Climate Change"},
-                {"id": "8", "value": "Health "},
-            ],
-        }
-    ]
-    economics = [
-        {
-            "id": "XX.YYY.ZZZZ",
-            "name": "Economics",
-            "unit": "",
-            "source": {"id": "5", "value": "Something"},
-            "sourceNote": "Something..",
-            "sourceOrganization": "Someone...",
-            "topics": [{"id": "99", "value": "Economics"}],
-        },
-        {
-            "id": "IGNORE.ME",
-            "name": "Economics",
-            "unit": "",
-            "source": {"id": "2", "value": "Something"},
-            "sourceNote": "Something..",
-            "sourceOrganization": "Someone...",
-            "topics": [{"id": "99", "value": "Economics"}],
-        },
-    ]
-    topics = [
-        {
-            "id": "17",
-            "value": "Gender and Science",
-            "sourceNote": "Gender equality is a core development objective...",
-            "tags": ["gender", "science"],
-            "sources": {"2": gender},
-        },
-        {
-            "id": "11",
-            "value": "Poverty",
-            "sourceNote": "For countries with an active poverty monitoring program...",
-            "tags": ["poverty"],
-            "sources": {"2": poverty},
-        },
-        {
-            "id": "8",
-            "value": "Health",
-            "sourceNote": "Improving health is central to the Millennium Development Goals...",
-            "tags": ["health"],
-            "sources": {"2": health},
-        },
-        {
-            "id": "99",
-            "value": "Economics",
-            "sourceNote": "Something...",
-            "tags": ["economics"],
-            "sources": dict(),
-        },
-        {
-            "id": "95",
-            "value": "Population",
-            "sourceNote": "Improving health is central to the Millennium Development Goals...",
-            "tags": ["population"],
-            "sources": {"2": population},
-        },
-    ]
-    countries = (
-        {
-            "id": "AFG",
-            "iso2Code": "AF",
-            "name": "Afghanistan",
-            "region": {"id": "SAS", "iso2code": "8S", "value": "South Asia"},
-            "adminregion": {"id": "SAS", "iso2code": "8S", "value": "South Asia"},
-            "incomeLevel": {"id": "LIC", "iso2code": "XM", "value": "Low income"},
-            "lendingType": {"id": "IDX", "iso2code": "XI", "value": "IDA"},
-            "capitalCity": "Kabul",
-            "longitude": "69.1761",
-            "latitude": "34.5228",
-        },
-        {
-            "id": "AFR",
-            "iso2Code": "A9",
-            "name": "Africa",
-            "region": {"id": "NA", "iso2code": "NA", "value": "Aggregates"},
-            "adminregion": {"id": "", "iso2code": "", "value": ""},
-            "incomeLevel": {"id": "NA", "iso2code": "NA", "value": "Aggregates"},
-            "lendingType": {"id": "", "iso2code": "", "value": "Aggregates"},
-            "capitalCity": "",
-            "longitude": "",
-            "latitude": "",
-        },
-    )
-    indicators = [
-        {
-            "page": 1,
-            "pages": 1,
-            "per_page": 10000,
-            "total": 236,
-            "sourceid": None,
-            "lastupdated": "2019-10-02",
-        },
-        [
-            {
-                "indicator": {
-                    "id": "SH.STA.MMRT",
-                    "value": "Maternal mortality ratio (modeled estimate, per 100,000 live births)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2018",
-                "value": None,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {
-                    "id": "SH.STA.MMRT",
-                    "value": "Maternal mortality ratio (modeled estimate, per 100,000 live births)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2017",
-                "value": 638,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {
-                    "id": "SH.STA.MMRT",
-                    "value": "Maternal mortality ratio (modeled estimate, per 100,000 live births)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2016",
-                "value": 673,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {
-                    "id": "SG.LAW.CHMR",
-                    "value": "Law prohibits or invalidates child or early marriage (1=yes; 0=no)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2017",
-                "value": 1,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 1,
-            },
-            {
-                "indicator": {
-                    "id": "SG.LAW.CHMR",
-                    "value": "Law prohibits or invalidates child or early marriage (1=yes; 0=no)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2016",
-                "value": 1,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 1,
-            },
-            {
-                "indicator": {
-                    "id": "SP.ADO.TFRT",
-                    "value": "Adolescent fertility rate (births per 1,000 women ages 15-19)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2017",
-                "value": 68.957,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {
-                    "id": "SP.ADO.TFRT",
-                    "value": "Adolescent fertility rate (births per 1,000 women ages 15-19)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2016",
-                "value": 75.325,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {
-                    "id": "SH.MMR.RISK",
-                    "value": "Lifetime risk of maternal death (1 in:  rate varies by country)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2017",
-                "value": 33,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {
-                    "id": "SH.MMR.RISK",
-                    "value": "Lifetime risk of maternal death (1 in:  rate varies by country)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2016",
-                "value": 30,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-        ],
-    ]
-    qc_indicators = [
-        {
-            "code": "SH.STA.MMRT",
-            "title": "Maternal mortality ratio (modeled estimate, per 100,000 live births)",
-            "unit": "modeled estimate, per 100,000 live births",
-        },
-        {
-            "code": "SP.ADO.TFRT",
-            "title": "Adolescent fertility rate (births per 1,000 women ages 15-19)",
-            "unit": "births per 1,000 women ages 15-19",
-        },
-        {
-            "code": "SH.MMR.RISK",
-            "title": "Lifetime risk of maternal death (1 in:  rate varies by country)",
-            "unit": "1 in:  rate varies by country",
-        },
-    ]
     dataset = {
         "name": "world-bank-gender-and-science-indicators-for-afghanistan",
         "title": "Afghanistan - Gender and Science",
@@ -421,11 +36,11 @@ class TestWorldBank:
         "groups": [{"name": "afg"}],
         "data_update_frequency": "30",
         "tags": [
-            {"name": "gender", "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87"},
             {
                 "name": "economics",
                 "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
             },
+            {"name": "gender", "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87"},
             {"name": "hxl", "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87"},
             {
                 "name": "indicators",
@@ -451,426 +66,14 @@ class TestWorldBank:
             "url_type": "upload",
         },
     ]
-    indicatorsp = [
-        {
-            "page": 1,
-            "pages": 1,
-            "per_page": 10000,
-            "total": 0,
-            "sourceid": None,
-            "lastupdated": "2019-10-02",
-        },
-        [
-            {
-                "indicator": {
-                    "id": "SI.POV.GAPS",
-                    "value": "Poverty gap at $1.90 a day (2011 PPP) (%)",
-                },
-                "country": {"id": "AW", "value": "Aruba"},
-                "countryiso3code": "ABW",
-                "date": "2019",
-                "value": None,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 1,
-            }
-        ],
-    ]
-    indicatorsh = [
-        {
-            "page": 1,
-            "pages": 1,
-            "per_page": 10000,
-            "total": 10,
-            "sourceid": None,
-            "lastupdated": "2019-10-02",
-        },
-        [
-            {
-                "indicator": {"id": "SP.POP.TOTL", "value": "Population, total"},
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2018",
-                "value": 37172386,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            }
-        ],
-    ]
-    indicatorsx = [
-        {
-            "page": 1,
-            "pages": 2,
-            "per_page": 10000,
-            "total": 10,
-            "sourceid": None,
-            "lastupdated": "2019-10-02",
-        },
-        [
-            {
-                "indicator": {"id": "SP2.POP.TOTL", "value": "Population, total"},
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2018",
-                "value": 37172386,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            }
-        ],
-    ]
-    indicators1 = [
-        {
-            "page": 1,
-            "pages": 1,
-            "per_page": 10000,
-            "total": 236,
-            "sourceid": None,
-            "lastupdated": "2019-10-02",
-        },
-        [
-            {
-                "indicator": {
-                    "id": "SH.STA.MMRT",
-                    "value": "Maternal mortality ratio (modeled estimate, per 100,000 live births)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2016",
-                "value": 673,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {
-                    "id": "SG.LAW.CHMR",
-                    "value": "Law prohibits or invalidates child or early marriage (1=yes; 0=no)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2016",
-                "value": 1,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 1,
-            },
-        ],
-    ]
-    indicators2 = [
-        {
-            "page": 1,
-            "pages": 1,
-            "per_page": 10000,
-            "total": 236,
-            "sourceid": None,
-            "lastupdated": "2019-10-02",
-        },
-        [
-            {
-                "indicator": {
-                    "id": "SP.ADO.TFRT",
-                    "value": "Adolescent fertility rate (births per 1,000 women ages 15-19)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2016",
-                "value": 75.325,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {
-                    "id": "SH.MMR.RISK",
-                    "value": "Lifetime risk of maternal death (1 in:  rate varies by country)",
-                },
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2016",
-                "value": 30,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-        ],
-    ]
-    indicatorst = [
-        {
-            "page": 1,
-            "pages": 1,
-            "per_page": 10000,
-            "total": 236,
-            "sourceid": None,
-            "lastupdated": "2019-10-02",
-        },
-        [
-            {
-                "indicator": {"id": "SP.POP.TOTL", "value": "Population, total"},
-                "country": {"id": "AF", "value": "Afghanistan"},
-                "countryiso3code": "AFG",
-                "date": "2018",
-                "value": 37172386,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {"id": "SP.POP.TOTL", "value": "Population, total"},
-                "country": {"id": "XX", "value": "XCountry"},
-                "countryiso3code": "XYZ",
-                "date": "2018",
-                "value": 1,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-            {
-                "indicator": {"id": "SP.POP.TOTL", "value": "Population, total"},
-                "country": {"id": "YY", "value": "YCountry"},
-                "countryiso3code": "YYZ",
-                "date": "2018",
-                "value": 1,
-                "unit": "",
-                "obs_status": "",
-                "decimal": 0,
-            },
-        ],
-    ]
-
-    @pytest.fixture(scope="function")
-    def configuration(self):
-        Configuration._create(
-            hdx_read_only=True,
-            hdx_site="feature",
-            user_agent="test",
-            project_config_yaml=join("tests", "config", "project_configuration.yaml"),
-        )
-        Locations.set_validlocations([{"name": "afg", "title": "Afghanistan"}])
-        Country.countriesdata(False)
-        tags = (
-            "hxl",
-            "gender",
-            "economics",
-            "poverty",
-            "health",
-            "population",
-            "indicators",
-        )
-        Vocabulary._tags_dict = {tag: {"Action to Take": "ok"} for tag in tags}
-        tags = [{"name": tag} for tag in tags]
-        Vocabulary._approved_vocabulary = {
-            "tags": tags,
-            "id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-            "name": "approved",
-        }
-        return Configuration.read()
-
-    @pytest.fixture(scope="function")
-    def downloader(self):
-        class Response:
-            @staticmethod
-            def json():
-                pass
-
-        class Download:
-            topics = [
-                {
-                    i: TestWorldBank.topics[0][i].replace("and", "&")
-                    for i in TestWorldBank.topics[0]
-                    if i not in ["tags", "sources"]
-                },
-                {
-                    i: TestWorldBank.topics[1][i]
-                    for i in TestWorldBank.topics[1]
-                    if i not in ["tags", "sources"]
-                },
-                {
-                    i: TestWorldBank.topics[2][i]
-                    for i in TestWorldBank.topics[2]
-                    if i not in ["tags", "sources"]
-                },
-                {
-                    i: TestWorldBank.topics[3][i]
-                    for i in TestWorldBank.topics[3]
-                    if i not in ["tags", "sources"]
-                },
-                {
-                    i: TestWorldBank.topics[4][i]
-                    for i in TestWorldBank.topics[4]
-                    if i not in ["tags", "sources"]
-                },
-            ]
-
-            @staticmethod
-            def download(url):
-                response = Response()
-                if (
-                    url
-                    == "http://lala/v2/en/sources/2/metatypes/source/search/iea?format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicators_to_ignore
-
-                    response.json = fn
-                elif url == "http://lala/v2/en/source?format=json&per_page=10000":
-
-                    def fn():
-                        return [None, TestWorldBank.sources]
-
-                    response.json = fn
-                elif url == "http://lala/v2/en/topic?format=json&per_page=10000":
-
-                    def fn():
-                        return [None, Download.topics]
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://lala/v2/en/topic/17/indicator?format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return [None, TestWorldBank.gender]
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://lala/v2/en/topic/11/indicator?format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return [None, TestWorldBank.poverty]
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://lala/v2/en/topic/8/indicator?format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return [None, TestWorldBank.health]
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://lala/v2/en/topic/95/indicator?format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return [None, TestWorldBank.population]
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://lala/v2/en/topic/99/indicator?format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return [None, TestWorldBank.economics]
-
-                    response.json = fn
-                elif url == "http://haha/v2/en/country?format=json&per_page=10000":
-
-                    def fn():
-                        return [None, TestWorldBank.countries]
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://papa/v2/en/country/AFG/indicator/SH.STA.MMRT;SG.LAW.CHMR;SP.ADO.TFRT;SH.MMR.RISK?source=2&format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicators
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://papa/v2/en/country/AFG/indicator/SI.POV.GAPS?source=2&format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicatorsp
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://papa/v2/en/country/AFG/indicator/SP.POP.TOTL?source=2&format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicatorsh
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://papa/v2/en/country/AFG/indicator/SP2.POP.TOTL?source=2&format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicatorsx
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://papa/v2/en/country/AFG/indicator/SH.STA.MMRT;SG.LAW.CHMR?source=2&format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicators1
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://papa/v2/en/country/AFG/indicator/SP.ADO.TFRT;SH.MMR.RISK?source=2&format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicators2
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://papa/v2/en/country/all/indicator/SP.POP.TOTL?source=2&mrnev=1&format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicatorst
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://lala/v2/en/country/all/indicator/SP.POP.TOTL?source=2&mrnev=1&format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicatorsp
-
-                    response.json = fn
-                elif (
-                    url
-                    == "http://haha/v2/en/country/all/indicator/SP.POP.TOTL?source=2&mrnev=1&format=json&per_page=10000"
-                ):
-
-                    def fn():
-                        return TestWorldBank.indicatorsx
-
-                    response.json = fn
-
-                return response
-
-        return Download()
 
     def test_get_topics(self, downloader):
         topics = get_topics("http://lala/", downloader)
-        assert topics == TestWorldBank.topics
+        assert topics == TopicsData.topics
 
     def test_get_countries(self, downloader):
         countries = get_countries("http://haha/", downloader)
-        assert list(countries) == [TestWorldBank.country]
+        assert list(countries) == [CountriesData.country]
 
     def test_get_unit(self):
         assert (
@@ -958,7 +161,7 @@ class TestWorldBank:
 
     def test_generate_dataset_and_showcase(self, configuration, downloader):
         with temp_dir("worldbank") as folder:
-            topic = TestWorldBank.topics[0]
+            topic = TopicsData.topics[0]
             (
                 dataset,
                 showcase,
@@ -966,17 +169,17 @@ class TestWorldBank:
                 years,
                 rows,
             ) = generate_dataset_and_showcase(
-                configuration, downloader, folder, TestWorldBank.country, topic
+                configuration, downloader, folder, CountriesData.country, topic
             )
             assert dataset == TestWorldBank.dataset
             resource = dataset.get_resources()
             assert resource == TestWorldBank.resources
-            filename = f"{slugify(topic['value'])}_{TestWorldBank.country['iso3']}.csv"
+            filename = f"{slugify(topic['value'])}_{CountriesData.country['iso3']}.csv"
             expected_file = join("tests", "fixtures", filename)
             actual_file = join(folder, filename)
             assert_files_same(expected_file, actual_file)
             filename = (
-                f"qc_{slugify(topic['value'])}_{TestWorldBank.country['iso3']}.csv"
+                f"qc_{slugify(topic['value'])}_{CountriesData.country['iso3']}.csv"
             )
             expected_file = join("tests", "fixtures", filename)
             actual_file = join(folder, filename)
@@ -990,11 +193,11 @@ class TestWorldBank:
                 "image_url": "https://www.worldbank.org/content/dam/wbr/logo/logo-wb-header-en.svg",
                 "tags": [
                     {
-                        "name": "gender",
+                        "name": "economics",
                         "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                     },
                     {
-                        "name": "economics",
+                        "name": "gender",
                         "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                     },
                     {
@@ -1007,27 +210,30 @@ class TestWorldBank:
                     },
                 ],
             }
-            assert qc_indicators == TestWorldBank.qc_indicators
+            assert qc_indicators == OtherData.qc_indicators
             assert years == [2016, 2017]
             assert len(rows) == 9
 
             dataset, _, _, _, topicname = generate_dataset_and_showcase(
-                configuration, downloader, folder, TestWorldBank.madeupcountry, topic
+                configuration, downloader, folder, CountriesData.madeupcountry, topic
             )
             assert topicname == "Gender and Science"
+            character_limit = configuration["character_limit"]
             configuration["character_limit"] = 25
             configuration["indicator_subtract"] = 2
             dataset, _, _, _, _ = generate_dataset_and_showcase(
-                configuration, downloader, folder, TestWorldBank.country, topic
+                configuration, downloader, folder, CountriesData.country, topic
             )
-            filename = f"{slugify(topic['value'])}_{TestWorldBank.country['iso3']}.csv"
+            configuration["character_limit"] = character_limit
+            del configuration["indicator_subtract"]
+            filename = f"{slugify(topic['value'])}_{CountriesData.country['iso3']}.csv"
             expected_file = join("tests", "fixtures", f"split_{filename}")
             actual_file = join(folder, filename)
             assert_files_same(expected_file, actual_file)
 
-    def test_generate_combined_dataset_and_showcase(self):
+    def test_generate_combined_dataset_and_showcase(self, configuration):
         dataset, showcase, bites_disabled = generate_combined_dataset_and_showcase(
-            None, None, TestWorldBank.madeupcountry, None, None, None, None, None
+            None, None, CountriesData.madeupcountry, None, None, None, None, None
         )
         assert dataset is None
         assert showcase is None
@@ -1042,8 +248,8 @@ class TestWorldBank:
                 configuration,
                 downloader,
                 folder,
-                TestWorldBank.country,
-                TestWorldBank.topics[:4],
+                CountriesData.country,
+                TopicsData.topics[:4],
                 create_dataset_showcase,
                 "1234",
             )
@@ -1097,7 +303,7 @@ class TestWorldBank:
                     "url_type": "upload",
                 },
             ]
-            filename = f"indicators_{TestWorldBank.country['iso3']}.csv"
+            filename = f"indicators_{CountriesData.country['iso3']}.csv"
             expected_file = join("tests", "fixtures", filename)
             actual_file = join(folder, filename)
             assert_files_same(expected_file, actual_file)
@@ -1140,8 +346,8 @@ class TestWorldBank:
                 configuration,
                 downloader,
                 folder,
-                TestWorldBank.country,
-                [TestWorldBank.topics[1]],
+                CountriesData.country,
+                [TopicsData.topics[1]],
                 create_dataset_showcase,
                 "1234",
             )
@@ -1154,15 +360,15 @@ class TestWorldBank:
                     configuration,
                     downloader,
                     folder,
-                    TestWorldBank.country,
-                    TestWorldBank.topics,
+                    CountriesData.country,
+                    TopicsData.topics,
                     create_dataset_showcase,
                     "1234",
                 )
 
     def test_generate_topline_dataset(self, configuration, downloader):
         with temp_dir("worldbank") as folder:
-            countries = [TestWorldBank.country, {"iso3": "YYZ"}]
+            countries = [CountriesData.country, {"iso3": "YYZ"}]
             topline_indicators = configuration["topline_indicators"]
             dataset = generate_topline_dataset(
                 configuration["base_url"],
