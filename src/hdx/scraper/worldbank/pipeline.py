@@ -6,9 +6,9 @@ World Bank:
 Generates World Bank datasets.
 
 """
+
 import logging
 import re
-from collections import OrderedDict
 
 from hdx.data.dataset import Dataset
 from hdx.data.hdxobject import HDXError
@@ -38,7 +38,7 @@ resource_name = "%s Indicators for %s"
 
 def get_topics(base_url, downloader):
     # look for indicators with special licence that should be excluded for now
-    url = f"{base_url}v2/en/sources/2/metatypes/license_url/search/iea.org?format=json&per_page=10000"
+    url = f"{base_url}v2/en/sources/2/metatypes/source/search/iea?format=json&per_page=10000"
     response = downloader.download(url)
     json = response.json()
     series = json["source"][0]["concept"][0]["variable"]
@@ -51,7 +51,7 @@ def get_topics(base_url, downloader):
     url = f"{base_url}v2/en/source?format=json&per_page=10000"
     response = downloader.download(url)
     json = response.json()
-    valid_sources = list()
+    valid_sources = []
     for source in json[1]:
         if source["dataavailability"] != "Y":
             continue
@@ -63,7 +63,7 @@ def get_topics(base_url, downloader):
     json = response.json()
     topics = json[1]
     for topic in json[1]:
-        tags = list()
+        tags = []
         value = topic["value"]
         tag_name = value.lower()
         if "&" in tag_name:
@@ -78,7 +78,7 @@ def get_topics(base_url, downloader):
         )
         response = downloader.download(url)
         json = response.json()
-        sources = dict()
+        sources = {}
         for indicator in json[1]:
             source_id = indicator["source"]["id"]
             if source_id not in valid_sources:
@@ -95,7 +95,7 @@ def get_countries(base_url, downloader):
     url = f"{base_url}v2/en/country?format=json&per_page=10000"
     response = downloader.download(url)
     json = response.json()
-    countries = list()
+    countries = []
     for country in json[1]:
         if country["region"]["value"] != "Aggregates":
             countries.append(
@@ -182,19 +182,22 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
         return None, None, None, None, topicname
 
     tag_mappings = configuration["tag_mappings"]
-    tags = topic["tags"]
-    for i, tag in enumerate(tags):
+    tags = set()
+    for tag in topic["tags"]:
         if tag in tag_mappings:
-            tags[i] = tag_mappings[tag]
-    tags.append("hxl")
-    tags.append("indicators")
+            tags.add(tag_mappings[tag])
+        else:
+            tags.add(tag)
+    tags.add("hxl")
+    tags.add("indicators")
+    tags = sorted(tags)
     dataset.add_tags(tags)
 
     years = set()
     qc_indicators = [None, None, None]
-    indicator_names_dict = dict()
-    indicators_len_dict = dict()
-    rows = list()
+    indicator_names_dict = {}
+    indicators_len_dict = {}
+    rows = []
 
     def add_rows(jsondata):
         for metadata in jsondata:
@@ -217,8 +220,8 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
                 }
             )
             len_indicator_code = len(indicator_code)
-            indicators_dict = indicators_len_dict.get(len_indicator_code, OrderedDict())
-            indicator_dict = indicators_dict.get(indicator_code, dict())
+            indicators_dict = indicators_len_dict.get(len_indicator_code, {})
+            indicator_dict = indicators_dict.get(indicator_code, {})
             indicator_dict[year] = value
             indicators_dict[indicator_code] = indicator_dict
             indicators_len_dict[len_indicator_code] = indicators_dict
@@ -351,7 +354,7 @@ def generate_combined_dataset_and_showcase(
         logger.exception(f"{countryname} has a problem! {e}")
         return None, None, None
     dataset.add_tags(tags)
-    topiclist = list()
+    topiclist = []
     for topic in topics:
         topicname = topic["value"]
         if topicname in ignore_topics:
@@ -405,10 +408,10 @@ def generate_combined_dataset_and_showcase(
 def generate_all_datasets_showcases(
     configuration, downloader, folder, country, topics, create_dataset_showcase, batch
 ):
-    allrows = list()
+    allrows = []
     alltags = set()
     allyears = set()
-    ignore_topics = list()
+    ignore_topics = []
     for topic in topics:
         dataset, showcase, qc_indicators, years, rows = generate_dataset_and_showcase(
             configuration, downloader, folder, country, topic
