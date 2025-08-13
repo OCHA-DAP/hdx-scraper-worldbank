@@ -100,15 +100,6 @@ class TopicsData:
             "sourceOrganization": "Someone...",
             "topics": [{"id": "99", "value": "Economics"}],
         },
-        {
-            "id": "IGNORE.ME",
-            "name": "Economics",
-            "unit": "",
-            "source": {"id": "2", "value": "Something"},
-            "sourceNote": "Something..",
-            "sourceOrganization": "Someone...",
-            "topics": [{"id": "99", "value": "Economics"}],
-        },
     ]
 
     topics = [

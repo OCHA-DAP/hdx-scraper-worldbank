@@ -1,32 +1,4 @@
 class OtherData:
-    indicators_to_ignore = {
-        "page": 1,
-        "pages": 1,
-        "per_page": "1000",
-        "total": 41,
-        "source": [
-            {
-                "id": "2",
-                "concept": [
-                    {
-                        "id": "Series",
-                        "variable": [
-                            {
-                                "id": "IGNORE.ME",
-                                "metatype": [
-                                    {
-                                        "id": "License_URL",
-                                        "value": "http: //www.iea.org/t&c/termsandconditions",
-                                    }
-                                ],
-                            }
-                        ],
-                    }
-                ],
-            }
-        ],
-    }
-
     sources = [
         {
             "id": "2",
