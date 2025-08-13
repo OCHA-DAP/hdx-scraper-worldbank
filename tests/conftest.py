@@ -81,16 +81,7 @@ def downloader():
         @staticmethod
         def download(url):
             response = Response()
-            if (
-                url
-                == "http://lala/v2/en/sources/2/metatypes/source/search/iea?format=json&per_page=10000"
-            ):
-
-                def fn():
-                    return OtherData.indicators_to_ignore
-
-                response.json = fn
-            elif url == "http://lala/v2/en/source?format=json&per_page=10000":
+            if url == "http://lala/v2/en/source?format=json&per_page=10000":
 
                 def fn():
                     return [None, OtherData.sources]

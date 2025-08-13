@@ -19,7 +19,7 @@ chardet==5.2.0
     # via
     #   -c requirements.txt
     #   frictionless
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via
     #   -c requirements.txt
     #   requests
@@ -31,7 +31,7 @@ click==8.2.1
     # via
     #   -c requirements.txt
     #   typer
-coverage==7.10.2
+coverage==7.10.3
     # via pytest-cov
 defopt==7.0.0
     # via
@@ -62,7 +62,7 @@ frictionless==5.18.1
     # via
     #   -c requirements.txt
     #   hdx-python-utilities
-hdx-python-api==6.4.6
+hdx-python-api==6.4.7
     # via
     #   -c requirements.txt
     #   hdx-scraper-worldbank (pyproject.toml)
@@ -134,11 +134,11 @@ makefun==1.16.0
     # via
     #   -c requirements.txt
     #   hdx-python-api
-markdown-it-py==3.0.0
+markdown-it-py==4.0.0
     # via
     #   -c requirements.txt
     #   rich
-marko==2.1.4
+marko==2.2.0
     # via
     #   -c requirements.txt
     #   frictionless
@@ -257,7 +257,7 @@ rich==14.1.0
     # via
     #   -c requirements.txt
     #   typer
-rpds-py==0.26.0
+rpds-py==0.27.0
     # via
     #   -c requirements.txt
     #   jsonschema
