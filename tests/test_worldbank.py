@@ -55,15 +55,11 @@ class TestWorldBank:
             "name": "Gender and Science Indicators for Afghanistan",
             "description": "HXLated csv containing Gender and Science indicators\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio",
             "format": "csv",
-            "resource_type": "file.upload",
-            "url_type": "upload",
         },
         {
             "name": "QuickCharts-Gender and Science Indicators for Afghanistan",
             "description": "Cut down data for QuickCharts",
             "format": "csv",
-            "resource_type": "file.upload",
-            "url_type": "upload",
         },
     ]
 
@@ -292,15 +288,11 @@ class TestWorldBank:
                     "name": "Combined Indicators for Afghanistan",
                     "description": "HXLated csv containing Economic, Social, Environmental, Health, Education, Development and Energy indicators",
                     "format": "csv",
-                    "resource_type": "file.upload",
-                    "url_type": "upload",
                 },
                 {
                     "name": "QuickCharts-Combined Indicators for Afghanistan",
                     "description": "Cut down data for QuickCharts",
                     "format": "csv",
-                    "resource_type": "file.upload",
-                    "url_type": "upload",
                 },
             ]
             filename = f"indicators_{CountriesData.country['iso3']}.csv"
