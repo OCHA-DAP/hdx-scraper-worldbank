@@ -12,10 +12,10 @@ build-backend = "hatchling.build"
 name = "hdx-scraper-worldbank"
 requires-python = ">=3.13"
 dependencies = [
-  "hdx-python-api>= 6.5.1",
-  "hdx-python-country>= 3.9.6",
-  "hdx-python-utilities>= 3.9.1",
-  "tenacity>= 9.1.2",
+  "hdx-python-api>= 6.6.5",
+  "hdx-python-country>= 4.1.1",
+  "hdx-python-utilities>= 4.0.8",
+  "tenacity>= 9.1.4",
 ]
 
 dynamic = ["version"]

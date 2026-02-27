@@ -1,5 +1,4 @@
 Country Name,Country ISO3,Year,Indicator Name,Indicator Code,Value
-#country+name,#country+code,#date+year,#indicator+name,#indicator+code,#indicator+value+num
 Afghanistan,AFG,2017,"Maternal mortality ratio (modeled estimate, per 100,000 live births)",SH.STA.MMRT,638
 Afghanistan,AFG,2016,"Maternal mortality ratio (modeled estimate, per 100,000 live births)",SH.STA.MMRT,673
 Afghanistan,AFG,2017,Law prohibits or invalidates child or early marriage (1=yes; 0=no),SG.LAW.CHMR,1

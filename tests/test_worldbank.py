@@ -12,7 +12,6 @@ from hdx.utilities.path import temp_dir
 from slugify import slugify
 
 from tests.countries_data import CountriesData
-from tests.other_data import OtherData
 from tests.topics_data import TopicsData
 
 from hdx.scraper.worldbank.pipeline import (
@@ -41,7 +40,6 @@ class TestWorldBank:
                 "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
             },
             {"name": "gender", "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87"},
-            {"name": "hxl", "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87"},
             {
                 "name": "indicators",
                 "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
@@ -53,12 +51,7 @@ class TestWorldBank:
     resources = [
         {
             "name": "Gender and Science Indicators for Afghanistan",
-            "description": "HXLated csv containing Gender and Science indicators\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio",
-            "format": "csv",
-        },
-        {
-            "name": "QuickCharts-Gender and Science Indicators for Afghanistan",
-            "description": "Cut down data for QuickCharts",
+            "description": "csv containing Gender and Science indicators\n\nIndicators: Adolescent fertility rate, Law prohibits or invalidates child or early marriage, Lifetime risk of maternal death, Maternal mortality ratio",
             "format": "csv",
         },
     ]
@@ -161,7 +154,6 @@ class TestWorldBank:
             (
                 dataset,
                 showcase,
-                qc_indicators,
                 years,
                 rows,
             ) = generate_dataset_and_showcase(
@@ -171,12 +163,6 @@ class TestWorldBank:
             resource = dataset.get_resources()
             assert resource == TestWorldBank.resources
             filename = f"{slugify(topic['value'])}_{CountriesData.country['iso3']}.csv"
-            expected_file = join("tests", "fixtures", filename)
-            actual_file = join(folder, filename)
-            assert_files_same(expected_file, actual_file)
-            filename = (
-                f"qc_{slugify(topic['value'])}_{CountriesData.country['iso3']}.csv"
-            )
             expected_file = join("tests", "fixtures", filename)
             actual_file = join(folder, filename)
             assert_files_same(expected_file, actual_file)
@@ -197,27 +183,22 @@ class TestWorldBank:
                         "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                     },
                     {
-                        "name": "hxl",
-                        "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                    },
-                    {
                         "name": "indicators",
                         "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                     },
                 ],
             }
-            assert qc_indicators == OtherData.qc_indicators
             assert years == [2016, 2017]
-            assert len(rows) == 9
+            assert len(rows) == 8
 
-            dataset, _, _, _, topicname = generate_dataset_and_showcase(
+            dataset, _, _, topicname = generate_dataset_and_showcase(
                 configuration, downloader, folder, CountriesData.madeupcountry, topic
             )
             assert topicname == "Gender and Science"
             character_limit = configuration["character_limit"]
             configuration["character_limit"] = 25
             configuration["indicator_subtract"] = 2
-            dataset, _, _, _, _ = generate_dataset_and_showcase(
+            dataset, _, _, _ = generate_dataset_and_showcase(
                 configuration, downloader, folder, CountriesData.country, topic
             )
             configuration["character_limit"] = character_limit
@@ -228,19 +209,18 @@ class TestWorldBank:
             assert_files_same(expected_file, actual_file)
 
     def test_generate_combined_dataset_and_showcase(self, configuration):
-        dataset, showcase, bites_disabled = generate_combined_dataset_and_showcase(
+        dataset, showcase = generate_combined_dataset_and_showcase(
             None, None, CountriesData.madeupcountry, None, None, None, None, None
         )
         assert dataset is None
         assert showcase is None
-        assert bites_disabled is None
 
     def test_generate_all_datasets_showcases(self, configuration, downloader):
-        def create_dataset_showcase(dataset, showcase, qc_indicators, batch):
+        def create_dataset_showcase(dataset, showcase, batch):
             pass
 
         with temp_dir("worldbank") as folder:
-            dataset, showcase, bites_disabled = generate_all_datasets_showcases(
+            dataset, showcase = generate_all_datasets_showcases(
                 configuration,
                 downloader,
                 folder,
@@ -272,10 +252,6 @@ class TestWorldBank:
                         "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                     },
                     {
-                        "name": "hxl",
-                        "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                    },
-                    {
                         "name": "indicators",
                         "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                     },
@@ -286,20 +262,11 @@ class TestWorldBank:
             assert resources == [
                 {
                     "name": "Combined Indicators for Afghanistan",
-                    "description": "HXLated csv containing Economic, Social, Environmental, Health, Education, Development and Energy indicators",
-                    "format": "csv",
-                },
-                {
-                    "name": "QuickCharts-Combined Indicators for Afghanistan",
-                    "description": "Cut down data for QuickCharts",
+                    "description": "csv containing Economic, Social, Environmental, Health, Education, Development and Energy indicators",
                     "format": "csv",
                 },
             ]
             filename = f"indicators_{CountriesData.country['iso3']}.csv"
-            expected_file = join("tests", "fixtures", filename)
-            actual_file = join(folder, filename)
-            assert_files_same(expected_file, actual_file)
-            filename = f"qc_{filename}"
             expected_file = join("tests", "fixtures", filename)
             actual_file = join(folder, filename)
             assert_files_same(expected_file, actual_file)
@@ -324,17 +291,12 @@ class TestWorldBank:
                         "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                     },
                     {
-                        "name": "hxl",
-                        "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                    },
-                    {
                         "name": "indicators",
                         "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                     },
                 ],
             }
-            assert bites_disabled == [False, True, True]
-            dataset, showcase, bites_disabled = generate_all_datasets_showcases(
+            dataset, showcase = generate_all_datasets_showcases(
                 configuration,
                 downloader,
                 folder,
@@ -345,7 +307,6 @@ class TestWorldBank:
             )
             assert dataset is None
             assert showcase is None
-            assert bites_disabled is None
 
             with pytest.raises(ValueError):
                 _ = generate_all_datasets_showcases(
