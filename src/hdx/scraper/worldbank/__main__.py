@@ -39,14 +39,12 @@ _LOOKUP = "hdx-scraper-worldbank"
 _UPDATED_BY_SCRIPT = "HDX Scraper: WorldBank"
 
 
-def create_dataset_showcase(dataset, showcase, qc_indicators, batch):
+def create_dataset_showcase(dataset, showcase, batch):
     dataset.update_from_yaml(
         script_dir_plus_file(join("config", "hdx_dataset_static.yaml"), main)
     )
-    dataset.generate_quickcharts(-1, indicators=qc_indicators)
     dataset.create_in_hdx(
         remove_additional_resources=True,
-        hxl_update=False,
         updated_by_script="HDX Scraper: World Bank",
         batch=batch,
     )
@@ -67,7 +65,6 @@ def main():
             batch = info["batch"]
             configuration = Configuration.read()
             base_url = configuration["base_url"]
-            combined_qc_indicators = configuration["combined_qc_indicators"]
             topics = get_topics(base_url, downloader)
             countries = get_countries(base_url, downloader)
             logger.info(f"Number of countries: {len(countries)}")
@@ -87,7 +84,6 @@ def main():
             )
             dataset.create_in_hdx(
                 remove_additional_resources=True,
-                hxl_update=False,
                 updated_by_script="HDX Scraper: WorldBank",
                 batch=batch,
             )
@@ -102,7 +98,7 @@ def main():
                 after=after_log(logger, logging.INFO),
             )
             def process_country(nextdict):
-                dataset, showcase, bites_disabled = generate_all_datasets_showcases(
+                dataset, showcase = generate_all_datasets_showcases(
                     configuration,
                     downloader,
                     folder,
@@ -117,14 +113,8 @@ def main():
                             join("config", "hdx_dataset_static.yaml"), main
                         )
                     )
-                    dataset.generate_quickcharts(
-                        -1,
-                        bites_disabled=bites_disabled,
-                        indicators=combined_qc_indicators,
-                    )
                     dataset.create_in_hdx(
                         remove_additional_resources=True,
-                        hxl_update=False,
                         updated_by_script=_UPDATED_BY_SCRIPT,
                         batch=batch,
                     )

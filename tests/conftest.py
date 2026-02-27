@@ -24,7 +24,6 @@ def configuration():
     Locations.set_validlocations([{"name": "afg", "title": "Afghanistan"}])
     Country.countriesdata(False)
     tags = (
-        "hxl",
         "gender",
         "economics",
         "poverty",

@@ -25,14 +25,6 @@ headers = [
     "Indicator Code",
     "Value",
 ]
-hxltags = {
-    "Country Name": "#country+name",
-    "Country ISO3": "#country+code",
-    "Year": "#date+year",
-    "Indicator Name": "#indicator+name",
-    "Indicator Code": "#indicator+code",
-    "Value": "#indicator+value+num",
-}
 resource_name = "%s Indicators for %s"
 
 
@@ -166,7 +158,7 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
         dataset = get_dataset(slugified_name, title, countryiso)
     except HDXError as e:
         logger.exception(f"{countryname} has a problem! {e}")
-        return None, None, None, None, topicname
+        return None, None, None, topicname
 
     tag_mappings = configuration["tag_mappings"]
     tags = set()
@@ -175,13 +167,11 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
             tags.add(tag_mappings[tag])
         else:
             tags.add(tag)
-    tags.add("hxl")
     tags.add("indicators")
     tags = sorted(tags)
     dataset.add_tags(tags)
 
     years = set()
-    qc_indicators = [None, None, None]
     indicator_names_dict = {}
     indicators_len_dict = {}
     rows = []
@@ -244,7 +234,7 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
 
     if len(years) == 0:
         logger.error(f"{title} has no data!")
-        return None, None, None, None, topicname
+        return None, None, None, topicname
 
     comb_dsname = get_combined_dataset_name(countryname)
     notes = [
@@ -253,32 +243,6 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
         topic["sourceNote"],
     ]
     dataset["notes"] = "".join(notes)
-
-    for len_indicator_code in sorted(indicators_len_dict):
-        indicators_dict = indicators_len_dict[len_indicator_code]
-        for indicator_code in indicators_dict:
-            ind_year_values = indicators_dict[indicator_code]
-            if len(set(ind_year_values.values())) == 1:
-                continue
-            indicator_name = indicator_names_dict[indicator_code]
-            if qc_indicators[0] is None:
-                qc_indicators[0] = {
-                    "code": indicator_code,
-                    "title": indicator_name,
-                    "unit": get_unit(indicator_name),
-                }
-            elif qc_indicators[1] is None:
-                qc_indicators[1] = {
-                    "code": indicator_code,
-                    "title": indicator_name,
-                    "unit": get_unit(indicator_name),
-                }
-            elif qc_indicators[2] is None:
-                qc_indicators[2] = {
-                    "code": indicator_code,
-                    "title": indicator_name,
-                    "unit": get_unit(indicator_name),
-                }
 
     indicator_names = set()
     for indicator_name_long in indicator_names_dict.values():
@@ -293,22 +257,19 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
     res_name = resource_name % (topicname, countryname)
     resourcedata = {
         "name": res_name,
-        "description": f"HXLated csv containing {topicname} indicators\n\nIndicators: {', '.join(sorted(indicator_names))}",
+        "description": f"csv containing {topicname} indicators\n\nIndicators: {', '.join(sorted(indicator_names))}",
     }
-    values = [x["code"] for x in qc_indicators if x]
-    quickcharts = {
-        "hashtag": "#indicator+code",
-        "values": values,
-        "numeric_hashtag": "#indicator+value+num",
-        "cutdown": 2,
-        "cutdownhashtags": ["#indicator+code", "#country+code", "#date+year"],
-    }
-    success, result = dataset.generate_resource_from_iterable(
-        headers, rows, hxltags, folder, filename, resourcedata, quickcharts=quickcharts
+    resource, result = dataset.generate_resource(
+        folder,
+        filename,
+        rows,
+        resourcedata,
+        headers,
     )
+    success = resource is not None
     if success is False:
         logger.warning(f"{title} has no data!")
-        return None, None, None
+        return None, None, None, None
     years = dataset.set_time_period_year_range(years)
 
     showcase = Showcase(
@@ -321,7 +282,7 @@ def generate_dataset_and_showcase(configuration, downloader, folder, country, to
         }
     )
     showcase.add_tags(tags)
-    return dataset, showcase, qc_indicators, years, result["rows"]
+    return dataset, showcase, years, result["rows"]
 
 
 def generate_combined_dataset_and_showcase(
@@ -339,7 +300,7 @@ def generate_combined_dataset_and_showcase(
         dataset = get_dataset(slugified_name, title, countryiso)
     except HDXError as e:
         logger.exception(f"{countryname} has a problem! {e}")
-        return None, None, None
+        return None, None
     dataset.add_tags(tags)
     topiclist = []
     for topic in topics:
@@ -359,22 +320,19 @@ def generate_combined_dataset_and_showcase(
     res_name = resource_name % ("Combined", countryname)
     resourcedata = {
         "name": res_name,
-        "description": f"HXLated csv containing {indicators} indicators",
+        "description": f"csv containing {indicators} indicators",
     }
-    values = [x["code"] for x in configuration["combined_qc_indicators"]]
-    quickcharts = {
-        "hashtag": "#indicator+code",
-        "values": values,
-        "numeric_hashtag": "#indicator+value+num",
-        "cutdown": 2,
-        "cutdownhashtags": ["#indicator+code", "#country+code", "#date+year"],
-    }
-    success, results = dataset.generate_resource_from_iterable(
-        headers, rows, hxltags, folder, filename, resourcedata, quickcharts=quickcharts
+    resource, results = dataset.generate_resource(
+        folder,
+        filename,
+        rows,
+        resourcedata,
+        headers,
     )
+    success = resource is not None
     if success is False:
         logger.warning(f"{title} has no data!")
-        return None, None, None
+        return None, None
 
     dataset.set_time_period_year_range(allyears)
 
@@ -389,7 +347,7 @@ def generate_combined_dataset_and_showcase(
     )
     showcase.add_tags(tags)
 
-    return dataset, showcase, results["bites_disabled"]
+    return dataset, showcase
 
 
 def generate_all_datasets_showcases(
@@ -400,19 +358,19 @@ def generate_all_datasets_showcases(
     allyears = set()
     ignore_topics = []
     for topic in topics:
-        dataset, showcase, qc_indicators, years, rows = generate_dataset_and_showcase(
+        dataset, showcase, years, rows = generate_dataset_and_showcase(
             configuration, downloader, folder, country, topic
         )
         if dataset is None:
             ignore_topics.append(rows)
         else:
             logger.info(f"Adding {country['name']} {topic['value']}")
-            allrows.extend(rows[1:])
+            allrows.extend(rows)
             alltags.update(dataset.get_tags())
             allyears.update(years)
-            create_dataset_showcase(dataset, showcase, qc_indicators, batch)
+            create_dataset_showcase(dataset, showcase, batch)
     if len(ignore_topics) == len(topics):
-        return None, None, None
+        return None, None
     return generate_combined_dataset_and_showcase(
         configuration,
         folder,
@@ -438,17 +396,7 @@ def generate_topline_dataset(
         raise ValueError("Not expecting more than one page!")
     allcountryisos = [x["iso3"] for x in countries]
     headers = ["countryiso", "indicator", "source", "url", "date", "unit", "value"]
-    rows = [
-        {
-            "countryiso": "#country+code",
-            "indicator": "#indicator+name",
-            "source": "#meta+source",
-            "url": "#meta+url",
-            "date": "#date",
-            "unit": "#indicator+unit",
-            "value": "#value+amount",
-        }
-    ]
+    rows = []
 
     title = "Topline Indicators"
     slugified_name = slugify("World Bank Country Topline Indicators").lower()
@@ -486,7 +434,11 @@ def generate_topline_dataset(
         "name": "topline_indicators",
         "description": "Country topline indicators",
     }
-    dataset.generate_resource_from_rows(
-        folder, "worldbank_topline.csv", rows, resourcedata, headers=headers
+    dataset.generate_resource(
+        folder,
+        "worldbank_topline.csv",
+        rows,
+        resourcedata,
+        headers,
     )
     return dataset
