@@ -10,22 +10,118 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hdx-scraper-worldbank"
+dynamic = ["version"]
 requires-python = ">=3.13"
 dependencies = [
-  "hdx-python-api>= 6.6.5",
-  "hdx-python-country>= 4.1.1",
-  "hdx-python-utilities>= 4.0.8",
+  "hdx-python-api>= 6.6.8",
+  "hdx-python-country>= 4.1.2",
+  "hdx-python-utilities>= 4.1.2",
   "tenacity>= 9.1.4",
 ]
+readme = "README.md"
 
-dynamic = ["version"]
+[project.urls]
+Homepage = "https://github.com/OCHA-DAP/hdx-scraper-worldbank"
+Repository = "https://github.com/OCHA-DAP/hdx-scraper-worldbank"
+Issues = "https://github.com/OCHA-DAP/hdx-scraper-worldbank/issues"
 
-[project.optional-dependencies]
-test = [
+[dependency-groups]
+dev = [
   "pytest",
-  "pytest-cov"
+  "pytest-cov",
+  "pre-commit",
+  "ruff==0.14.14",
 ]
-dev = ["pre-commit"]
 
 [project.scripts]
 run = "hdx.scraper.worldbank.__main__:main"
+
+# ----------------------------------------------------------------------------
+# Hatchling (Build & Versioning)
+# ----------------------------------------------------------------------------
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+version_scheme = "python-simplified-semver"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/hdx/scraper/worldbank/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hdx"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+# ----------------------------------------------------------------------------
+# Ruff (Linting & Formatting)
+# ----------------------------------------------------------------------------
+
+[tool.ruff]
+target-version = "py313"
+src = ["src"]
+exclude = ["_version.py"]
+
+[tool.ruff.lint]
+# Defaults are E (pycodestyle) and F (pyflakes). We extend them:
+extend-select = [
+  "I",   # isort
+  "UP",  # pyupgrade
+]
+ignore = [
+    "E501", # Line too long
+]
+
+[tool.ruff.lint.isort]
+known-local-folder = ["hdx.scraper.worldbank"]
+known-third-party = [
+    "hdx.api",
+    "hdx.location",
+    "hdx.data",
+    "hdx.database",
+    "hdx.facades",
+    "hdx.scraper",
+    "hdx.utilities",
+]
+
+# ----------------------------------------------------------------------------
+# Pytest (Testing)
+# ----------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+log_cli = true
+addopts = """
+    --color=yes
+    --rootdir=.
+    --junitxml=test-results.xml
+    --cov
+    --no-cov-on-fail
+    --cov-report=lcov
+    --cov-report=term-missing
+"""
+
+# ----------------------------------------------------------------------------
+# Coverage (Reporting)
+# ----------------------------------------------------------------------------
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/_version.py"]
+
+[tool.coverage.report]
+exclude_also = [
+    "from ._version",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@(abc\\.)?abstractmethod",
+]

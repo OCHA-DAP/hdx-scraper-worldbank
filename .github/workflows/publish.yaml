@@ -8,10 +8,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout code
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -19,14 +18,18 @@ jobs:
       - name: Tag Info
         id: tag_info
         run: |
-          export IMAGE_TAG="${GITHUB_REF#refs/*/}"
-          export IMAGE_TAG=${IMAGE_TAG//[^[:alnum:].-]/-}
-          echo ::set-output name=IMAGE_TAG::${IMAGE_TAG}
+          # 1. Strip the refs/tags/ prefix
+          IMAGE_TAG="${GITHUB_REF#refs/*/}"
+          # 2. Sanitize tag (replace special chars with dashes)
+          IMAGE_TAG=${IMAGE_TAG//[^[:alnum:].-]/-}
+          # 3. New syntax for setting outputs
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
+
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
@@ -47,3 +50,6 @@ jobs:
           context: .
           push: true
           tags: public.ecr.aws/unocha/hdx-scraper-worldbank:${{ steps.tag_info.outputs.IMAGE_TAG }}
+          # Enable cache to speed up re-builds
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

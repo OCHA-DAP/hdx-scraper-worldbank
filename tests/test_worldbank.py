@@ -33,7 +33,7 @@ class TestWorldBank:
         "owner_org": "905a9a49-5325-4a31-a9d7-147a60a8387c",
         "subnational": "0",
         "groups": [{"name": "afg"}],
-        "data_update_frequency": "30",
+        "data_update_frequency": "365",
         "tags": [
             {
                 "name": "economics",
@@ -236,7 +236,7 @@ class TestWorldBank:
                 "owner_org": "905a9a49-5325-4a31-a9d7-147a60a8387c",
                 "subnational": "0",
                 "groups": [{"name": "afg"}],
-                "data_update_frequency": "30",
+                "data_update_frequency": "365",
                 "dataset_date": "[2016-01-01T00:00:00 TO 2018-12-31T23:59:59]",
                 "tags": [
                     {
@@ -337,7 +337,7 @@ class TestWorldBank:
                 "owner_org": "905a9a49-5325-4a31-a9d7-147a60a8387c",
                 "subnational": "0",
                 "groups": [{"name": "afg"}],
-                "data_update_frequency": "30",
+                "data_update_frequency": "365",
                 "dataset_date": "[2018-01-01T00:00:00 TO 2018-12-31T23:59:59]",
                 "tags": [
                     {
