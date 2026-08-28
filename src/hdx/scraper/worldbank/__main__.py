@@ -36,7 +36,7 @@ from hdx.scraper.worldbank.pipeline import (
 logger = logging.getLogger(__name__)
 
 _LOOKUP = "hdx-scraper-worldbank"
-_UPDATED_BY_SCRIPT = "HDX Scraper: WorldBank"
+_UPDATED_BY_SCRIPT = "HDX Scraper: World Bank"
 
 
 def create_dataset_showcase(dataset, showcase, batch):
@@ -45,7 +45,7 @@ def create_dataset_showcase(dataset, showcase, batch):
     )
     dataset.create_in_hdx(
         remove_additional_resources=True,
-        updated_by_script="HDX Scraper: World Bank",
+        updated_by_script=_UPDATED_BY_SCRIPT,
         batch=batch,
     )
     showcase.create_in_hdx()
@@ -84,7 +84,7 @@ def main():
             )
             dataset.create_in_hdx(
                 remove_additional_resources=True,
-                updated_by_script="HDX Scraper: WorldBank",
+                updated_by_script=_UPDATED_BY_SCRIPT,
                 batch=batch,
             )
 
